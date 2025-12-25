@@ -9,6 +9,8 @@
   --brand: #4b3bbd;
   --border: rgba(60, 70, 90, 0.12);
   --shadow: 0 20px 40px rgba(43, 49, 66, 0.12);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --tap: 48px;
 }
 
 * {
@@ -107,6 +109,7 @@ a {
 
 .button:focus-visible,
 .icon-button:focus-visible,
+.icon-btn:focus-visible,
 .chip:focus-visible,
 .segmented__tab:focus-visible,
 select:focus-visible,
@@ -135,6 +138,10 @@ input[type="file"]:focus-visible {
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
   backdrop-filter: blur(10px);
+}
+
+.panel.is-active {
+  animation: panelFadeIn 420ms ease-out;
 }
 
 .panel-subtitle {
@@ -178,7 +185,7 @@ input[type="file"]:focus-visible {
 
 .panel-controls {
   position: fixed;
-  bottom: 2rem;
+  bottom: calc(1.25rem + var(--safe-bottom));
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -186,13 +193,14 @@ input[type="file"]:focus-visible {
   background: rgba(255, 255, 255, 0.55);
   border: 1px solid var(--border);
   border-radius: 999px;
-  padding: 0.5rem 0.8rem;
-  backdrop-filter: blur(12px);
+  padding: 0.5rem 0.8rem calc(0.5rem + var(--safe-bottom));
+  backdrop-filter: blur(10px);
 }
 
-.icon-button {
-  width: 42px;
-  height: 42px;
+.icon-button,
+.icon-btn {
+  width: var(--tap);
+  height: var(--tap);
   border-radius: 50%;
   border: 1px solid transparent;
   background: transparent;
@@ -202,15 +210,17 @@ input[type="file"]:focus-visible {
   transition: background 0.2s ease, transform 0.2s ease;
 }
 
-.icon-button:hover {
+.icon-button:hover,
+.icon-btn:hover {
   background: rgba(255, 255, 255, 0.6);
 }
 
-.icon-button svg {
-  width: 20px;
-  height: 20px;
+.icon-button svg,
+.icon-btn svg {
+  width: 22px;
+  height: 22px;
   fill: none;
-  stroke: var(--text);
+  stroke: currentColor;
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -221,7 +231,7 @@ input[type="file"]:focus-visible {
 .icon-button .icon-pause {
   display: none;
   stroke: none;
-  fill: var(--text);
+  fill: currentColor;
 }
 
 .icon-button.is-playing .icon-pause {
@@ -236,6 +246,15 @@ input[type="file"]:focus-visible {
   display: block;
 }
 
+.icon-btn--danger {
+  border-color: rgba(255, 60, 90, 0.25);
+  color: rgba(255, 60, 90, 0.9);
+}
+
+.icon-btn--danger:hover {
+  background: rgba(255, 60, 90, 0.08);
+}
+
 .app-shell {
   padding: 7rem 1.5rem 3rem;
   display: flex;
@@ -247,7 +266,7 @@ input[type="file"]:focus-visible {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 28px;
-  box-shadow: var(--shadow);
+  box-shadow: 0 18px 50px rgba(12, 10, 28, 0.1);
   padding: 2rem;
   backdrop-filter: blur(12px);
 }
@@ -270,6 +289,11 @@ input[type="file"]:focus-visible {
   cursor: pointer;
   color: var(--muted);
   font-weight: 500;
+}
+
+.segmented__tab,
+.button {
+  min-height: 44px;
 }
 
 .segmented__tab.is-active {
@@ -311,6 +335,11 @@ input[type="file"]:focus-visible {
   min-width: 160px;
 }
 
+.panel-body,
+.main p {
+  max-width: 62ch;
+}
+
 @media (max-width: 520px) {
   .button-row {
     flex-wrap: wrap;
@@ -318,6 +347,34 @@ input[type="file"]:focus-visible {
 
   .button-row .button {
     flex: 1 1 160px;
+  }
+
+  .segmented {
+    margin-bottom: 1.1rem;
+  }
+
+  .segmented__tab,
+  .button {
+    min-height: 48px;
+  }
+
+  .panel-body,
+  .main {
+    font-size: 1.02rem;
+    line-height: 1.68;
+  }
+
+  .panel-eyebrow {
+    letter-spacing: 0.12em;
+  }
+
+  .surface {
+    box-shadow: 0 14px 40px rgba(12, 10, 28, 0.08);
+    backdrop-filter: blur(8px);
+  }
+
+  .panel-controls {
+    backdrop-filter: blur(8px);
   }
 }
 
@@ -413,7 +470,14 @@ select {
   padding: 1rem 1.2rem;
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.7rem;
+}
+
+.history-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
 }
 
 .history-meta {
@@ -422,6 +486,32 @@ select {
   gap: 0.6rem;
   color: var(--muted);
   font-size: 0.9rem;
+}
+
+.history-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  margin-bottom: 0.35rem;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.chips .chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.22rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid rgba(20, 22, 27, 0.12);
+  background: rgba(255, 255, 255, 0.55);
+  font-size: 0.85rem;
+  color: rgba(20, 22, 27, 0.78);
+  cursor: default;
 }
 
 .file-input {
@@ -450,5 +540,20 @@ select {
   * {
     transition: none !important;
     animation: none !important;
+  }
+
+  .panel.is-active {
+    animation: none;
+  }
+}
+
+@keyframes panelFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

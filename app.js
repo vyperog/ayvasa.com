@@ -50,6 +50,7 @@
         const isActive = index === currentIndex;
         panel.style.display = isActive ? "block" : "none";
         panel.setAttribute("aria-hidden", String(!isActive));
+        panel.classList.toggle("is-active", isActive);
       });
       panelCount.textContent = `Panel ${currentIndex + 1} of ${totalPanels}`;
       updateHash();
@@ -481,21 +482,58 @@
         const card = document.createElement("div");
         card.className = "history-card";
         const date = new Date(session.endedAt).toLocaleString();
-        const phasesText = session.phases.length === 5
-          ? "All"
-          : session.phases.length
-            ? session.phases.join(",")
-            : "—";
-        const tagsText = session.tags.length ? session.tags.join(", ") : "—";
-        card.innerHTML = `
-          <strong>${date}</strong>
-          <div class="history-meta">
-            <span>Duration: ${formatDuration(session.durationSec)}</span>
-            <span>Phases: ${phasesText}</span>
-            <span>Tags: ${tagsText}</span>
-          </div>
-          <button class="button ghost" data-delete="${session.id}">Delete</button>
-        `;
+        const header = document.createElement("div");
+        header.className = "history-card__header";
+
+        const title = document.createElement("strong");
+        title.textContent = date;
+
+        const delBtn = document.createElement("button");
+        delBtn.className = "icon-btn icon-btn--danger";
+        delBtn.type = "button";
+        delBtn.dataset.delete = session.id;
+        delBtn.setAttribute("aria-label", "Delete session");
+        delBtn.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 7h12M9 7V5h6v2m-7 3v9m4-9v9m4-9v9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>`;
+
+        header.append(title, delBtn);
+
+        const meta = document.createElement("div");
+        meta.className = "history-meta";
+        const duration = document.createElement("span");
+        duration.textContent = `Duration: ${formatDuration(session.durationSec)}`;
+        meta.appendChild(duration);
+
+        const phasesWrap = document.createElement("div");
+        const phasesLabel = document.createElement("div");
+        phasesLabel.className = "history-label";
+        phasesLabel.textContent = "Phases";
+        const phaseChips = document.createElement("div");
+        phaseChips.className = "chips";
+        const phases = session.phases?.length ? session.phases : [];
+        if (phases.length === 5) {
+          phaseChips.innerHTML = `<span class="chip">All</span>`;
+        } else if (phases.length) {
+          phaseChips.innerHTML = phases
+            .map((phase) => `<span class="chip">Phase ${phase}</span>`)
+            .join("");
+        } else {
+          phaseChips.innerHTML = `<span class="chip">No phases selected</span>`;
+        }
+        phasesWrap.append(phasesLabel, phaseChips);
+
+        const tagsWrap = document.createElement("div");
+        const tagsLabel = document.createElement("div");
+        tagsLabel.className = "history-label";
+        tagsLabel.textContent = "Tags";
+        const tagChips = document.createElement("div");
+        tagChips.className = "chips";
+        const tags = session.tags?.length ? session.tags : ["No tags"];
+        tagChips.innerHTML = tags.map((tag) => `<span class="chip">${tag}</span>`).join("");
+        tagsWrap.append(tagsLabel, tagChips);
+
+        card.append(header, meta, phasesWrap, tagsWrap);
         historyList.appendChild(card);
       });
     };
