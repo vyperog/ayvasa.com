@@ -211,12 +211,12 @@
   const setupPractice = () => {
     const viewButtons = document.querySelectorAll(".segmented__tab");
     const views = document.querySelectorAll(".view");
-    const startBtn = document.getElementById("startSession");
-    const endBtn = document.getElementById("endSession");
+    const primaryBtn = document.getElementById("primarySessionBtn");
     const cancelBtn = document.getElementById("cancelSession");
     const saveBtn = document.getElementById("saveSession");
     const discardBtn = document.getElementById("discardSession");
     const sessionSummary = document.getElementById("sessionSummary");
+    const practiceStatus = document.getElementById("practiceStatus");
     const phaseChips = document.getElementById("phaseChips");
     const tagChips = document.getElementById("tagChips");
     const historyList = document.getElementById("historyList");
@@ -234,6 +234,10 @@
     let frozenDurationSec = null;
     let selectedPhases = new Set();
     let selectedTags = [];
+    let isActiveSession = false;
+    let statusTimer = null;
+    let dbReady = false;
+    let dbInitPromise = null;
 
     const dbState = {
       db: null,
@@ -253,7 +257,10 @@
           dbState.db = request.result;
           resolve(request.result);
         };
-        request.onerror = () => reject(request.error);
+        request.onerror = () => {
+          console.error("IndexedDB open failed:", request.error);
+          reject(request.error);
+        };
       });
     };
 
@@ -267,7 +274,10 @@
         const store = getStore("readwrite");
         const request = store.add(session);
         request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
+        request.onerror = () => {
+          console.error("IndexedDB add failed:", request.error);
+          reject(request.error);
+        };
       });
     };
 
@@ -328,12 +338,31 @@
       return Math.max(0, Math.floor((end - sessionStartMs) / 1000));
     };
 
+    const updatePrimaryBtn = () => {
+      primaryBtn.textContent = isActiveSession ? "End Session" : "Start Session";
+    };
+
+    const setStatus = (message) => {
+      practiceStatus.textContent = message;
+      if (statusTimer) {
+        window.clearTimeout(statusTimer);
+      }
+      if (message) {
+        statusTimer = window.setTimeout(() => {
+          practiceStatus.textContent = "";
+        }, 4000);
+      }
+    };
+
     const startSession = () => {
       sessionStartMs = Date.now();
       sessionEndMs = null;
       frozenDurationSec = null;
       clearSelections();
+      isActiveSession = true;
+      updatePrimaryBtn();
       renderState("active");
+      setStatus("Your practice session has started.");
     };
 
     const endSession = () => {
@@ -341,7 +370,10 @@
       sessionEndMs = Date.now();
       frozenDurationSec = Math.max(0, Math.floor((sessionEndMs - sessionStartMs) / 1000));
       sessionSummary.textContent = `Session length: ${formatDuration(frozenDurationSec)}`;
+      isActiveSession = false;
+      updatePrimaryBtn();
       renderState("checkin");
+      setStatus("Your practice session has ended.");
     };
 
     const cancelSession = ({ confirmActive = false } = {}) => {
@@ -355,8 +387,11 @@
       sessionStartMs = null;
       sessionEndMs = null;
       frozenDurationSec = null;
+      isActiveSession = false;
+      updatePrimaryBtn();
       clearSelections();
       renderState("idle");
+      setStatus("");
     };
 
     const saveSession = async () => {
@@ -368,6 +403,7 @@
         window.alert("Session too short to save. Practice a bit longer and try again.");
         return;
       }
+      await ensureDb();
       const session = {
         startedAt: new Date(sessionStartMs).toISOString(),
         endedAt: new Date(sessionEndMs).toISOString(),
@@ -379,6 +415,7 @@
       renderState("idle");
       setView("history");
       await renderHistory();
+      setStatus("");
     };
 
     const togglePhase = (phase) => {
@@ -431,6 +468,7 @@
     };
 
     const renderHistory = async () => {
+      await ensureDb();
       const sessions = await getAllSessions();
       const sorted = sessions.sort((a, b) => new Date(b.endedAt) - new Date(a.endedAt));
       const filtered = applyFilters(sorted);
@@ -463,6 +501,7 @@
     };
 
     const exportData = async () => {
+      await ensureDb();
       const sessions = await getAllSessions();
       const data = JSON.stringify(sessions, null, 2);
       const blob = new Blob([data], { type: "application/json" });
@@ -475,6 +514,7 @@
     };
 
     const importData = async (file) => {
+      await ensureDb();
       const text = await file.text();
       const data = JSON.parse(text);
       if (!Array.isArray(data)) return;
@@ -498,8 +538,13 @@
       button.addEventListener("click", () => setView(button.dataset.view));
     });
 
-    startBtn.addEventListener("click", startSession);
-    endBtn.addEventListener("click", endSession);
+    primaryBtn.addEventListener("click", () => {
+      if (isActiveSession) {
+        endSession();
+      } else {
+        startSession();
+      }
+    });
     cancelBtn.addEventListener("click", () => cancelSession({ confirmActive: true }));
     saveBtn.addEventListener("click", saveSession);
     discardBtn.addEventListener("click", () => cancelSession());
@@ -540,14 +585,37 @@
     });
 
     clearAllBtn.addEventListener("click", async () => {
+      await ensureDb();
       if (window.confirm("Clear all session data?")) {
         await clearSessions();
         await renderHistory();
       }
     });
 
-    openDatabase().then(renderHistory);
+    saveBtn.disabled = true;
+    exportBtn.disabled = true;
+    clearAllBtn.disabled = true;
+
+    const ensureDb = async () => {
+      if (dbReady) return;
+      if (!dbInitPromise) {
+        dbInitPromise = openDatabase().then(() => {
+          dbReady = true;
+          saveBtn.disabled = false;
+          exportBtn.disabled = false;
+          clearAllBtn.disabled = false;
+        });
+      }
+      return dbInitPromise;
+    };
+
+    ensureDb()
+      .then(renderHistory)
+      .catch((error) => {
+        console.error("IndexedDB init failed:", error);
+      });
     renderState("idle");
+    updatePrimaryBtn();
   };
 
   const page = document.body.dataset.page;

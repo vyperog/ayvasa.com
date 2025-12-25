@@ -6,12 +6,17 @@
   --muted: #5b6475;
   --accent: #5067d6;
   --accent2: #7a6bd6;
+  --brand: #4b3bbd;
   --border: rgba(60, 70, 90, 0.12);
   --shadow: 0 20px 40px rgba(43, 49, 66, 0.12);
 }
 
 * {
   box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
 }
 
 body {
@@ -57,8 +62,10 @@ a {
 }
 
 .brand {
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brand);
 }
 
 .site-nav {
@@ -296,7 +303,22 @@ input[type="file"]:focus-visible {
 .button-row {
   display: flex;
   gap: 0.75rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+}
+
+.button-row .button {
+  flex: 0 0 auto;
+  min-width: 160px;
+}
+
+@media (max-width: 520px) {
+  .button-row {
+    flex-wrap: wrap;
+  }
+
+  .button-row .button {
+    flex: 1 1 160px;
+  }
 }
 
 .protocol {

@@ -8,7 +8,7 @@
 </head>
 <body data-page="practice">
   <header class="site-header">
-    <a class="brand" href="index.html">Ayvasa</a>
+    <a class="brand" href="index.html">AYVASA</a>
     <nav class="site-nav">
       <a class="button ghost" href="index.html">Protocol</a>
     </nav>
@@ -23,19 +23,18 @@
       </div>
 
       <section class="view" data-view="practice">
-        <div class="view-block" data-state="idle">
+        <div class="view-block">
           <h1>Practice</h1>
           <p class="muted">No alerts. No interruptions.</p>
-          <button class="button primary" id="startSession">Start Session</button>
+          <div class="button-row">
+            <button class="button primary" id="primarySessionBtn">Start Session</button>
+            <button class="button ghost" id="cancelSession">Cancel</button>
+          </div>
+          <p class="muted status-text" id="practiceStatus" aria-live="polite"></p>
         </div>
 
         <div class="view-block" data-state="active" hidden>
-          <div class="button-row">
-            <button class="button primary" id="endSession">End Session</button>
-            <button class="button ghost" id="cancelSession">Cancel</button>
-          </div>
-
-          <details class="protocol" open>
+          <details class="protocol">
             <summary>Protocol reference (phases 0–4)</summary>
             <div class="protocol-grid">
               <article>
