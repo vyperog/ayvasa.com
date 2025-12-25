@@ -215,8 +215,7 @@
     const endBtn = document.getElementById("endSession");
     const cancelBtn = document.getElementById("cancelSession");
     const saveBtn = document.getElementById("saveSession");
-    const backBtn = document.getElementById("backToSession");
-    const elapsedTime = document.getElementById("elapsedTime");
+    const discardBtn = document.getElementById("discardSession");
     const sessionSummary = document.getElementById("sessionSummary");
     const phaseChips = document.getElementById("phaseChips");
     const tagChips = document.getElementById("tagChips");
@@ -227,11 +226,12 @@
     const importInput = document.getElementById("importData");
     const clearAllBtn = document.getElementById("clearAll");
 
-    const stateBlocks = document.querySelectorAll("[data-state]");
+    const practiceView = document.querySelector('.view[data-view="practice"]');
+    const stateBlocks = practiceView ? practiceView.querySelectorAll("[data-state]") : [];
 
-    let timerId = null;
-    let sessionStart = null;
-    let sessionEnd = null;
+    let sessionStartMs = null;
+    let sessionEndMs = null;
+    let frozenDurationSec = null;
     let selectedPhases = new Set();
     let selectedTags = [];
 
@@ -315,53 +315,63 @@
       });
     };
 
-    const updateElapsed = () => {
-      const now = Date.now();
-      const elapsed = Math.max(0, Math.floor((now - sessionStart) / 1000));
-      elapsedTime.textContent = formatDuration(elapsed);
-    };
-
-    const startSession = () => {
-      sessionStart = Date.now();
-      sessionEnd = null;
+    const clearSelections = () => {
       selectedPhases = new Set();
       selectedTags = [];
       phaseChips.querySelectorAll(".chip").forEach((chip) => chip.classList.remove("is-selected"));
       tagChips.querySelectorAll(".chip").forEach((chip) => chip.classList.remove("is-selected"));
+    };
+
+    const getElapsedSeconds = () => {
+      if (!sessionStartMs) return 0;
+      const end = sessionEndMs ?? Date.now();
+      return Math.max(0, Math.floor((end - sessionStartMs) / 1000));
+    };
+
+    const startSession = () => {
+      sessionStartMs = Date.now();
+      sessionEndMs = null;
+      frozenDurationSec = null;
+      clearSelections();
       renderState("active");
-      updateElapsed();
-      timerId = window.setInterval(updateElapsed, 1000);
     };
 
     const endSession = () => {
-      sessionEnd = Date.now();
-      if (timerId) {
-        clearInterval(timerId);
-      }
-      const duration = Math.max(0, Math.floor((sessionEnd - sessionStart) / 1000));
-      sessionSummary.textContent = `Session length: ${formatDuration(duration)}`;
+      if (!sessionStartMs) return;
+      sessionEndMs = Date.now();
+      frozenDurationSec = Math.max(0, Math.floor((sessionEndMs - sessionStartMs) / 1000));
+      sessionSummary.textContent = `Session length: ${formatDuration(frozenDurationSec)}`;
       renderState("checkin");
     };
 
-    const cancelSession = () => {
-      if (timerId) {
-        clearInterval(timerId);
+    const cancelSession = ({ confirmActive = false } = {}) => {
+      if (confirmActive && sessionStartMs && !sessionEndMs) {
+        const elapsedSec = getElapsedSeconds();
+        if (elapsedSec > 5) {
+          const confirmed = window.confirm("Cancel this session? It won’t be saved.");
+          if (!confirmed) return;
+        }
       }
-      sessionStart = null;
-      sessionEnd = null;
+      sessionStartMs = null;
+      sessionEndMs = null;
+      frozenDurationSec = null;
+      clearSelections();
       renderState("idle");
     };
 
     const saveSession = async () => {
-      if (!sessionStart || !sessionEnd) {
+      if (!sessionStartMs || !sessionEndMs || frozenDurationSec === null) {
         renderState("idle");
         return;
       }
-      const durationSec = Math.max(0, Math.floor((sessionEnd - sessionStart) / 1000));
+      if (frozenDurationSec < 10) {
+        window.alert("Session too short to save. Practice a bit longer and try again.");
+        return;
+      }
       const session = {
-        startedAt: new Date(sessionStart).toISOString(),
-        endedAt: new Date(sessionEnd).toISOString(),
-        durationSec,
+        startedAt: new Date(sessionStartMs).toISOString(),
+        endedAt: new Date(sessionEndMs).toISOString(),
+        durationSec: frozenDurationSec,
         phases: Array.from(selectedPhases).sort(),
         tags: [...selectedTags],
       };
@@ -490,9 +500,9 @@
 
     startBtn.addEventListener("click", startSession);
     endBtn.addEventListener("click", endSession);
-    cancelBtn.addEventListener("click", cancelSession);
+    cancelBtn.addEventListener("click", () => cancelSession({ confirmActive: true }));
     saveBtn.addEventListener("click", saveSession);
-    backBtn.addEventListener("click", () => renderState("active"));
+    discardBtn.addEventListener("click", () => cancelSession());
 
     phaseChips.addEventListener("click", (event) => {
       const button = event.target.closest(".chip");
