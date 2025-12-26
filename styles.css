@@ -53,12 +53,15 @@ body {
   min-height: 100vh;
 }
 
-h1, h2, h3 {
+h1,
+h2,
+h3 {
   margin: 0 0 0.6rem;
   letter-spacing: -0.02em;
 }
 
-p, li {
+p,
+li {
   line-height: var(--lh);
   margin: 0 0 0.6rem;
 }
@@ -203,7 +206,7 @@ input[type="file"]:focus-visible {
   margin: 0;
 }
 
-.prose p + p {
+.prose p+p {
   margin-top: var(--s-3);
 }
 
@@ -216,7 +219,7 @@ input[type="file"]:focus-visible {
   margin: 0;
 }
 
-.prose li + li {
+.prose li+li {
   margin-top: var(--s-2);
 }
 
@@ -246,7 +249,7 @@ input[type="file"]:focus-visible {
   margin: 0 auto;
 }
 
-.stack > * + * {
+.stack>*+* {
   margin-top: var(--s-4);
 }
 
@@ -266,6 +269,7 @@ input[type="file"]:focus-visible {
 }
 
 .panel-count {
+  top: 2rem;
   margin: 0 0 var(--s-4);
   font-size: 0.85rem;
   color: var(--muted);
