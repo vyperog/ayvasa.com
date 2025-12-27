@@ -276,12 +276,24 @@ input[type="file"]:focus-visible {
 }
 
 .panel-bleed-image {
-  width: calc(100% + var(--panel-pad-x) * 2);
-  margin-left: calc(var(--panel-pad-x) * -1);
-  margin-right: calc(var(--panel-pad-x) * -1);
-  margin-bottom: calc(var(--panel-pad-y) * -1);
   display: block;
+  width: 100%;
+  height: auto;
+}
+
+.panel--bleed {
+  padding: 0;
+}
+
+.panel--bleed .panel-inner {
+  padding: var(--panel-pad-y) var(--panel-pad-x) 0;
+}
+
+.panel--bleed .panel-bleed-image {
+  width: calc(100% + var(--panel-pad-x) * 2);
+  margin: var(--s-6) calc(var(--panel-pad-x) * -1) 0;
   max-width: none;
+  object-fit: cover;
 }
 
 .panel-count {
