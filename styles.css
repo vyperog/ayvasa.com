@@ -604,6 +604,20 @@ select {
     min-height: 520px;
   }
 
+  .panel--bleed {
+    padding: 0;
+  }
+
+  .panel--bleed .panel-inner {
+    padding: 2rem 1.5rem 0;
+  }
+
+  .panel--bleed .panel-bleed-image {
+    width: calc(100% + 3rem);
+    margin-left: -1.5rem;
+    margin-right: -1.5rem;
+  }
+
   .surface {
     padding: var(--s-6);
   }
