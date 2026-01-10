@@ -586,6 +586,22 @@ select {
   font-size: 0.9rem;
 }
 
+.history-meta--secondary {
+  font-size: 0.85rem;
+  color: rgba(91, 100, 117, 0.9);
+}
+
+.history-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+}
+
+.carryover-form {
+  padding-top: var(--s-2);
+  border-top: 1px solid rgba(60, 70, 90, 0.12);
+}
+
 .file-input {
   position: relative;
   overflow: hidden;

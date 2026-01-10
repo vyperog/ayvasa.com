@@ -37,6 +37,23 @@
           <p class="muted status-text" id="practiceStatus" aria-live="polite"></p>
         </div>
 
+        <div class="view-block" data-state="precheckin" hidden>
+          <h2>Pre-session entry state (optional)</h2>
+          <div class="field">
+            <div class="chip-row" id="entryStateChips">
+              <button class="chip" data-entry-state="settled">settled</button>
+              <button class="chip" data-entry-state="neutral">neutral</button>
+              <button class="chip" data-entry-state="activated">activated</button>
+              <button class="chip" data-entry-state="scattered">scattered</button>
+              <button class="chip" data-entry-state="fatigued">fatigued</button>
+            </div>
+          </div>
+          <div class="button-row">
+            <button class="button primary" id="beginSession">Begin Session</button>
+            <button class="button ghost" id="skipEntryState">Skip</button>
+          </div>
+        </div>
+
         <div class="view-block" data-state="active" hidden>
           <details class="protocol">
             <summary>Protocol reference (phases 0–4)</summary>
@@ -94,6 +111,44 @@
               <button class="chip" data-tag="unclear">unclear</button>
               <button class="chip" data-tag="spacious">spacious</button>
               <button class="chip" data-tag="compressed">compressed</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <h3>Interference level (optional)</h3>
+            <div class="chip-row" id="interferenceChips">
+              <button class="chip" data-interference="minimal">minimal</button>
+              <button class="chip" data-interference="moderate">moderate</button>
+              <button class="chip" data-interference="frequent">frequent</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <h3>Phase 4 stillness estimate (optional)</h3>
+            <div class="chip-row" id="phase4EstimateChips">
+              <button class="chip" data-phase4-estimate="<1 min">&lt;1 min</button>
+              <button class="chip" data-phase4-estimate="1–3 min">1–3 min</button>
+              <button class="chip" data-phase4-estimate="3–6 min">3–6 min</button>
+              <button class="chip" data-phase4-estimate="unknown / fluctuated">unknown / fluctuated</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <h3>Somatic anchor (optional)</h3>
+            <div class="chip-row" id="somaticAnchorChips">
+              <button class="chip" data-somatic-anchor="palate">palate</button>
+              <button class="chip" data-somatic-anchor="chest">chest</button>
+              <button class="chip" data-somatic-anchor="spine">spine</button>
+              <button class="chip" data-somatic-anchor="whole-body">whole-body</button>
+              <button class="chip" data-somatic-anchor="diffuse / unclear">diffuse / unclear</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <h3>Re-entry friction (optional)</h3>
+            <div class="chip-row" id="reentryChips">
+              <button class="chip" data-reentry="yes">Re-entry felt abrupt — yes</button>
+              <button class="chip" data-reentry="no">Re-entry felt abrupt — no</button>
             </div>
           </div>
 
