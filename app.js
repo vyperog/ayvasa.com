@@ -1371,3 +1371,40 @@
     setupPractice();
   }
 })();
+ (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
+diff --git a/app.js b/app.js
+index 75dd461ac86db981827a1a673397b3c1bff182d9..77db908f3f30ee1df02ab0ed77422179dc3ae416 100644
+--- a/app.js
++++ b/app.js
+@@ -1349,25 +1349,31 @@
+     updateTagsButtonState();
+ 
+     ensureDb()
+       .then(renderHistory)
+       .catch((error) => {
+         console.error("IndexedDB init failed:", error);
+       });
+     renderState("idle");
+     setCirclePulsing(false);
+ 
+     window.addEventListener("beforeunload", (event) => {
+       if (!isActiveSession) return;
+       event.preventDefault();
+       event.returnValue = "";
+     });
+   };
+ 
+   const page = document.body.dataset.page;
+   if (page === "home") {
+     setupHome();
+   }
+   if (page === "practice") {
+     setupPractice();
+   }
+ })();
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/service-worker.js");
+  });
+}
