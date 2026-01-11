@@ -370,6 +370,9 @@
       if (state === "review") {
         renderReview();
       }
+      if (state === "post_phases") {
+        updatePhaseChips();
+      }
       if (state === "post_tags") {
         updateTagsButtonState();
       }
@@ -382,6 +385,7 @@
           sessionPrompt.textContent = "Tap the circle to return to check-in.";
         }
       }
+      updateNextVisibilityForCurrentStep();
     };
 
     const setView = (view) => {
@@ -663,8 +667,13 @@
       if (session.harderThanUsual !== undefined && session.harderThanUsual !== null) {
         items.push(`Harder than usual: ${session.harderThanUsual ? "yes" : "no"}`);
       }
-      if (Number.isFinite(session.contextDelayHours)) {
-        items.push(`Context delay: ${session.contextDelayHours} hr`);
+      if (Number.isFinite(session.contextDelayMin)) {
+        if (session.contextDelayMin < 60) {
+          items.push(`Context delay: ${session.contextDelayMin} min`);
+        } else {
+          const hours = Math.round((session.contextDelayMin / 60) * 10) / 10;
+          items.push(`Context delay: ${hours} hr`);
+        }
       }
       return items;
     };
@@ -697,9 +706,16 @@
 
     const hasValidTagSelection = () => selectedTags.length > 0 && selectedTags.length <= 2;
 
+    const updateNextVisibilityForCurrentStep = () => {
+      if (practiceStep === "post_tags" && tagsContinueBtn) {
+        const isValid = hasValidTagSelection();
+        tagsContinueBtn.hidden = false;
+        tagsContinueBtn.disabled = !isValid;
+      }
+    };
+
     const updateTagsButtonState = () => {
-      if (!tagsContinueBtn) return;
-      tagsContinueBtn.disabled = !hasValidTagSelection();
+      updateNextVisibilityForCurrentStep();
     };
 
     const getPostSteps = () => {
@@ -1053,7 +1069,7 @@
         if (!meta) return;
         const willShow = meta.hidden;
         meta.hidden = !willShow;
-        metaToggleBtn.textContent = willShow ? "View" : "View more";
+        metaToggleBtn.textContent = willShow ? "View less" : "View more";
         return;
       }
 
@@ -1172,8 +1188,8 @@
         if (!form || !session) return;
         const now = new Date();
         const endedAtMs = new Date(session.endedAt).getTime();
-        const delayHours = Number.isFinite(endedAtMs)
-          ? Math.max(0, Math.round((now.getTime() - endedAtMs) / 3600000))
+        const delayMin = Number.isFinite(endedAtMs)
+          ? Math.max(0, Math.round((now.getTime() - endedAtMs) / 60000))
           : 0;
         const updates = {};
         contextFields.forEach((field) => {
@@ -1191,7 +1207,7 @@
           ...session,
           ...updates,
           contextLoggedAt: now.toISOString(),
-          contextDelayHours: delayHours,
+          contextDelayMin: delayMin,
         });
         await renderHistory();
         return;

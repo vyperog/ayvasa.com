@@ -686,6 +686,10 @@ select {
   margin-bottom: var(--s-3);
 }
 
+.carryover-form .history-card__actions {
+  margin-top: var(--s-3);
+}
+
 .context-form .history-card__actions {
   margin-top: var(--s-3);
 }
