@@ -11,26 +11,34 @@
     const map = document.getElementById("protocolMap");
     const splashOverlay = document.getElementById("splashOverlay");
     if (splashOverlay) {
-      document.body.classList.add("splash-active");
-      if (prefersReducedMotion) {
-        splashOverlay.classList.add("is-visible");
-      } else {
-        requestAnimationFrame(() => splashOverlay.classList.add("is-visible"));
-      }
-      const splashDurationMs = 2300;
-      window.setTimeout(() => {
+      const splashShown = window.sessionStorage.getItem("coherenceSplashShown") === "1";
+      if (splashShown) {
+        splashOverlay.hidden = true;
         splashOverlay.classList.remove("is-visible");
-        const finalize = () => {
-          splashOverlay.hidden = true;
-          document.body.classList.remove("splash-active");
-          splashOverlay.removeEventListener("transitionend", finalize);
-        };
+        document.body.classList.remove("splash-active");
+      } else {
+        window.sessionStorage.setItem("coherenceSplashShown", "1");
+        document.body.classList.add("splash-active");
         if (prefersReducedMotion) {
-          finalize();
+          splashOverlay.classList.add("is-visible");
         } else {
-          splashOverlay.addEventListener("transitionend", finalize);
+          requestAnimationFrame(() => splashOverlay.classList.add("is-visible"));
         }
-      }, splashDurationMs);
+        const splashDurationMs = 2300;
+        window.setTimeout(() => {
+          splashOverlay.classList.remove("is-visible");
+          const finalize = () => {
+            splashOverlay.hidden = true;
+            document.body.classList.remove("splash-active");
+            splashOverlay.removeEventListener("transitionend", finalize);
+          };
+          if (prefersReducedMotion) {
+            finalize();
+          } else {
+            splashOverlay.addEventListener("transitionend", finalize);
+          }
+        }, splashDurationMs);
+      }
     }
     if (!map) return;
 
