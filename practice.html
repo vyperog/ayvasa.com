@@ -23,22 +23,17 @@
       </div>
 
       <section class="view" data-view="practice">
-        <div class="view-block">
+        <div class="practice-screen" data-step="idle">
           <h1>Practice</h1>
           <p class="muted">No alerts. No interruptions.</p>
           <div class="button-row">
-            <button class="button primary" id="primarySessionBtn">Start Session</button>
-            <button class="button ghost" id="cancelSession">Cancel</button>
+            <button class="button primary" id="beginFlow">Begin New Session</button>
           </div>
-          <div class="session-indicator" id="sessionIndicator" hidden aria-live="polite">
-            <span class="session-dot" aria-hidden="true"></span>
-            <span>Session in progress</span>
-          </div>
-          <p class="muted status-text" id="practiceStatus" aria-live="polite"></p>
         </div>
 
-        <div class="view-block" data-state="precheckin" hidden>
-          <h2>Pre-session entry state (optional)</h2>
+        <div class="practice-screen" data-step="entryState" hidden>
+          <h2>Entry state (optional)</h2>
+          <p class="practice-prompt">Notice the starting tone before practice.</p>
           <div class="field">
             <div class="chip-row" id="entryStateChips">
               <button class="chip" data-entry-state="settled">settled</button>
@@ -49,45 +44,33 @@
             </div>
           </div>
           <div class="button-row">
-            <button class="button primary" id="beginSession">Begin Session</button>
-            <button class="button ghost" id="skipEntryState">Skip</button>
+            <button class="button primary" id="entryBegin">Begin Session</button>
+            <button class="button ghost" id="entrySkip">Skip</button>
+            <button class="button ghost" id="entryCancel">Cancel</button>
           </div>
         </div>
 
-        <div class="view-block" data-state="active" hidden>
-          <details class="protocol">
-            <summary>Protocol reference (phases 0–4)</summary>
-            <div class="protocol-grid">
-              <article>
-                <h3>Phase 0 — Baseline Breath Reset</h3>
-                <p>Awareness rests on the natural breath. No control.</p>
-              </article>
-              <article>
-                <h3>Phase 1 — Micro-Resonance Entry</h3>
-                <p>Include breath and body as a whole. Return gently.</p>
-              </article>
-              <article>
-                <h3>Phase 2 — Coherence Compression</h3>
-                <p>Soft breath. Let pauses be, without managing timing.</p>
-              </article>
-              <article>
-                <h3>Phase 3 — Resonant Sweep</h3>
-                <p>Palate → Sinuses → Brow → Crown → Heart.</p>
-              </article>
-              <article>
-                <h3>Phase 4 — The Threshold Window</h3>
-                <p>Rest in the subtle gap. Open, unforced.</p>
-              </article>
-            </div>
-          </details>
+        <div class="practice-screen practice-center" data-step="readyCircle" hidden>
+          <h2>Ready</h2>
+          <p class="practice-prompt">Tap the circle to begin the session.</p>
+          <button class="session-circle" data-session-circle type="button">
+            <span>Begin</span>
+          </button>
+          <button class="button ghost" id="readyCancel">Cancel</button>
         </div>
 
-        <div class="view-block" data-state="checkin" hidden>
-          <h2>Post-session check-in</h2>
-          <p class="muted" id="sessionSummary">Session length: 0:00</p>
+        <div class="practice-screen practice-center" data-step="inSession" hidden>
+          <h2 id="sessionProgressTitle">Session in progress</h2>
+          <p class="practice-prompt" id="sessionProgressPrompt">Tap the circle again to end the session.</p>
+          <button class="session-circle is-pulsing" data-session-circle type="button">
+            <span>End</span>
+          </button>
+        </div>
 
+        <div class="practice-screen" data-step="post_phases" hidden>
+          <h2>Phases practiced</h2>
+          <p class="practice-prompt">Which phases did you practice today?</p>
           <div class="field">
-            <h3>Phases practiced</h3>
             <div class="chip-row" id="phaseChips">
               <button class="chip" data-phase="all">All phases</button>
               <button class="chip" data-phase="0">Phase 0</button>
@@ -97,9 +80,15 @@
               <button class="chip" data-phase="4">Phase 4</button>
             </div>
           </div>
+          <div class="button-row">
+            <button class="button ghost" data-action="back">Back</button>
+          </div>
+        </div>
 
+        <div class="practice-screen" data-step="post_tags" hidden>
+          <h2>Experience tags</h2>
+          <p class="practice-prompt">Which qualities were most present? (optional, max 2)</p>
           <div class="field">
-            <h3>Experience tags (optional, max 2)</h3>
             <div class="chip-row" id="tagChips">
               <button class="chip" data-tag="quiet">quiet</button>
               <button class="chip" data-tag="neutral">neutral</button>
@@ -113,18 +102,32 @@
               <button class="chip" data-tag="compressed">compressed</button>
             </div>
           </div>
+          <div class="button-row">
+            <button class="button ghost" data-action="back">Back</button>
+            <button class="button primary" id="tagsContinue">Continue</button>
+            <button class="button ghost" id="tagsSkip">Skip</button>
+          </div>
+        </div>
 
+        <div class="practice-screen" data-step="post_interference" hidden>
+          <h2>Interference level</h2>
+          <p class="practice-prompt">How often did interference arise?</p>
           <div class="field">
-            <h3>Interference level (optional)</h3>
             <div class="chip-row" id="interferenceChips">
               <button class="chip" data-interference="minimal">minimal</button>
               <button class="chip" data-interference="moderate">moderate</button>
               <button class="chip" data-interference="frequent">frequent</button>
             </div>
           </div>
+          <div class="button-row">
+            <button class="button ghost" data-action="back">Back</button>
+          </div>
+        </div>
 
+        <div class="practice-screen" data-step="post_phase4" hidden>
+          <h2>Phase 4 stillness estimate</h2>
+          <p class="practice-prompt">Approximate time stillness felt available.</p>
           <div class="field">
-            <h3>Phase 4 stillness estimate (optional)</h3>
             <div class="chip-row" id="phase4EstimateChips">
               <button class="chip" data-phase4-estimate="<1 min">&lt;1 min</button>
               <button class="chip" data-phase4-estimate="1–3 min">1–3 min</button>
@@ -132,9 +135,15 @@
               <button class="chip" data-phase4-estimate="unknown / fluctuated">unknown / fluctuated</button>
             </div>
           </div>
+          <div class="button-row">
+            <button class="button ghost" data-action="back">Back</button>
+          </div>
+        </div>
 
+        <div class="practice-screen" data-step="post_anchor" hidden>
+          <h2>Somatic anchor</h2>
+          <p class="practice-prompt">Where was coherence most noticeable?</p>
           <div class="field">
-            <h3>Somatic anchor (optional)</h3>
             <div class="chip-row" id="somaticAnchorChips">
               <button class="chip" data-somatic-anchor="palate">palate</button>
               <button class="chip" data-somatic-anchor="chest">chest</button>
@@ -143,15 +152,29 @@
               <button class="chip" data-somatic-anchor="diffuse / unclear">diffuse / unclear</button>
             </div>
           </div>
+          <div class="button-row">
+            <button class="button ghost" data-action="back">Back</button>
+          </div>
+        </div>
 
+        <div class="practice-screen" data-step="post_reentry" hidden>
+          <h2>Re-entry friction</h2>
+          <p class="practice-prompt">Did re-entry feel abrupt?</p>
           <div class="field">
-            <h3>Re-entry friction (optional)</h3>
             <div class="chip-row" id="reentryChips">
-              <button class="chip" data-reentry="yes">Re-entry felt abrupt — yes</button>
-              <button class="chip" data-reentry="no">Re-entry felt abrupt — no</button>
+              <button class="chip" data-reentry="yes">yes</button>
+              <button class="chip" data-reentry="no">no</button>
             </div>
           </div>
+          <div class="button-row">
+            <button class="button ghost" data-action="back">Back</button>
+          </div>
+        </div>
 
+        <div class="practice-screen" data-step="review" hidden>
+          <h2>Review</h2>
+          <p class="practice-prompt">Confirm the session details before saving.</p>
+          <dl class="review-list" id="reviewSummary"></dl>
           <div class="button-row">
             <button class="button primary" id="saveSession">Save Session</button>
             <button class="button ghost" id="discardSession">Discard</button>

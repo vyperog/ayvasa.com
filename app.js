@@ -233,14 +233,16 @@
   const setupPractice = () => {
     const viewButtons = document.querySelectorAll(".segmented__tab");
     const views = document.querySelectorAll(".view");
-    const primaryBtn = document.getElementById("primarySessionBtn");
-    const cancelBtn = document.getElementById("cancelSession");
-    const beginBtn = document.getElementById("beginSession");
-    const skipEntryBtn = document.getElementById("skipEntryState");
+    const beginFlowBtn = document.getElementById("beginFlow");
+    const entryBeginBtn = document.getElementById("entryBegin");
+    const entrySkipBtn = document.getElementById("entrySkip");
+    const entryCancelBtn = document.getElementById("entryCancel");
+    const readyCancelBtn = document.getElementById("readyCancel");
+    const tagsContinueBtn = document.getElementById("tagsContinue");
+    const tagsSkipBtn = document.getElementById("tagsSkip");
     const saveBtn = document.getElementById("saveSession");
     const discardBtn = document.getElementById("discardSession");
-    const sessionSummary = document.getElementById("sessionSummary");
-    const practiceStatus = document.getElementById("practiceStatus");
+    const reviewSummary = document.getElementById("reviewSummary");
     const phaseChips = document.getElementById("phaseChips");
     const tagChips = document.getElementById("tagChips");
     const entryStateChips = document.getElementById("entryStateChips");
@@ -254,10 +256,12 @@
     const exportBtn = document.getElementById("exportData");
     const importInput = document.getElementById("importData");
     const clearAllBtn = document.getElementById("clearAll");
-    const sessionIndicator = document.getElementById("sessionIndicator");
+    const sessionTitle = document.getElementById("sessionProgressTitle");
+    const sessionPrompt = document.getElementById("sessionProgressPrompt");
+    const sessionCircles = document.querySelectorAll("[data-session-circle]");
 
     const practiceView = document.querySelector('.view[data-view="practice"]');
-    const stateBlocks = practiceView ? practiceView.querySelectorAll("[data-state]") : [];
+    const practiceScreens = practiceView ? practiceView.querySelectorAll("[data-step]") : [];
 
     let sessionStartMs = null;
     let sessionEndMs = null;
@@ -265,7 +269,6 @@
     let selectedPhases = new Set();
     let selectedTags = [];
     let isActiveSession = false;
-    let statusTimer = null;
     let dbReady = false;
     let dbInitPromise = null;
     let entryState = null;
@@ -274,6 +277,10 @@
     let somaticAnchor = null;
     let reentryAbrupt = null;
     let sessionCache = new Map();
+    let practiceStep = "idle";
+    let pulseInterval = null;
+
+    const contextFields = ["sleepQuality", "stressLevel", "dayType", "lifeSmoother", "harderThanUsual"];
 
     const dbState = {
       db: null,
@@ -357,9 +364,22 @@
     };
 
     const renderState = (state) => {
-      stateBlocks.forEach((block) => {
-        block.hidden = block.dataset.state !== state;
+      practiceScreens.forEach((block) => {
+        block.hidden = block.dataset.step !== state;
       });
+      practiceStep = state;
+      if (state === "review") {
+        renderReview();
+      }
+      if (state === "inSession" && sessionTitle && sessionPrompt) {
+        if (isActiveSession) {
+          sessionTitle.textContent = "Session in progress";
+          sessionPrompt.textContent = "Tap the circle again to end the session.";
+        } else {
+          sessionTitle.textContent = "Session ended";
+          sessionPrompt.textContent = "Tap the circle to return to check-in.";
+        }
+      }
     };
 
     const setView = (view) => {
@@ -411,31 +431,46 @@
       return Math.max(0, Math.floor((end - sessionStartMs) / 1000));
     };
 
-    const updatePrimaryBtn = () => {
-      primaryBtn.textContent = isActiveSession ? "End Session" : "Start Session";
-    };
-
-    const setSessionIndicator = (on) => {
-      if (!sessionIndicator) return;
-      sessionIndicator.hidden = !on;
-    };
-
-    const setStatus = (message) => {
-      practiceStatus.textContent = message;
-      if (statusTimer) {
-        window.clearTimeout(statusTimer);
+    const updateCirclePulse = () => {
+      if (!isActiveSession || prefersReducedMotion) return;
+      const elapsedMin = getElapsedSeconds() / 60;
+      let duration = 4.5;
+      if (elapsedMin >= 25) {
+        duration = 12;
+      } else if (elapsedMin >= 15) {
+        duration = 8;
+      } else if (elapsedMin >= 5) {
+        duration = 6;
       }
-      if (message) {
-        statusTimer = window.setTimeout(() => {
-          practiceStatus.textContent = "";
-        }, 4000);
-      }
+      sessionCircles.forEach((circle) => {
+        circle.style.setProperty("--pulse-duration", `${duration}s`);
+      });
     };
 
-    const showPrecheckin = () => {
-      clearEntryStateSelection();
-      renderState("precheckin");
-      setStatus("");
+    const setCirclePulsing = (on) => {
+      sessionCircles.forEach((circle) => {
+        circle.classList.toggle("is-pulsing", on && !prefersReducedMotion);
+        if (!on) {
+          circle.style.removeProperty("--pulse-duration");
+        }
+      });
+    };
+
+    const startPulseTimer = () => {
+      if (prefersReducedMotion) return;
+      updateCirclePulse();
+      if (pulseInterval) {
+        window.clearInterval(pulseInterval);
+      }
+      pulseInterval = window.setInterval(updateCirclePulse, 12000);
+    };
+
+    const stopPulseTimer = () => {
+      if (pulseInterval) {
+        window.clearInterval(pulseInterval);
+        pulseInterval = null;
+      }
+      setCirclePulsing(false);
     };
 
     const startSession = ({ entryStateValue = null } = {}) => {
@@ -445,22 +480,28 @@
       entryState = entryStateValue;
       clearCheckinSelections();
       isActiveSession = true;
-      updatePrimaryBtn();
-      setSessionIndicator(true);
-      renderState("active");
-      setStatus("Your practice session has started.");
+      setCirclePulsing(true);
+      startPulseTimer();
+      renderState("inSession");
     };
 
     const endSession = () => {
       if (!sessionStartMs) return;
       sessionEndMs = Date.now();
       frozenDurationSec = Math.max(0, Math.floor((sessionEndMs - sessionStartMs) / 1000));
-      sessionSummary.textContent = `Session length: ${formatDuration(frozenDurationSec)}`;
       isActiveSession = false;
-      updatePrimaryBtn();
-      setSessionIndicator(false);
-      renderState("checkin");
-      setStatus("Your practice session has ended.");
+      stopPulseTimer();
+      renderState("post_phases");
+    };
+
+    const resetSessionState = () => {
+      sessionStartMs = null;
+      sessionEndMs = null;
+      frozenDurationSec = null;
+      isActiveSession = false;
+      clearCheckinSelections();
+      clearEntryStateSelection();
+      stopPulseTimer();
     };
 
     const cancelSession = ({ confirmActive = false } = {}) => {
@@ -471,16 +512,8 @@
           if (!confirmed) return;
         }
       }
-      sessionStartMs = null;
-      sessionEndMs = null;
-      frozenDurationSec = null;
-      isActiveSession = false;
-      updatePrimaryBtn();
-      setSessionIndicator(false);
-      clearCheckinSelections();
-      clearEntryStateSelection();
+      resetSessionState();
       renderState("idle");
-      setStatus("");
     };
 
     const saveSession = async () => {
@@ -516,15 +549,10 @@
         session.reentryAbrupt = reentryAbrupt;
       }
       await addSession(session);
-      clearCheckinSelections();
-      clearEntryStateSelection();
-      sessionStartMs = null;
-      sessionEndMs = null;
-      frozenDurationSec = null;
+      resetSessionState();
       renderState("idle");
       setView("history");
       await renderHistory();
-      setStatus("");
     };
 
     const togglePhase = (phase) => {
@@ -548,6 +576,10 @@
           chip.classList.toggle("is-selected", selectedPhases.has(Number(chip.dataset.phase)));
         }
       });
+      if (!shouldIncludePhase4()) {
+        phase4Estimate = null;
+        clearChipRow(phase4EstimateChips);
+      }
     };
 
     const toggleTag = (tag) => {
@@ -599,6 +631,24 @@
           : "";
         items.push(`Carryover: ${session.carryover}${delay}`);
       }
+      if (session.sleepQuality) {
+        items.push(`Sleep: ${session.sleepQuality}`);
+      }
+      if (session.stressLevel) {
+        items.push(`Stress: ${session.stressLevel}`);
+      }
+      if (session.dayType) {
+        items.push(`Day type: ${session.dayType}`);
+      }
+      if (session.lifeSmoother) {
+        items.push(`Life smoother: ${session.lifeSmoother}`);
+      }
+      if (session.harderThanUsual !== undefined && session.harderThanUsual !== null) {
+        items.push(`Harder than usual: ${session.harderThanUsual ? "yes" : "no"}`);
+      }
+      if (Number.isFinite(session.contextDelayHours)) {
+        items.push(`Context delay: ${session.contextDelayHours} hr`);
+      }
       return items;
     };
 
@@ -608,6 +658,75 @@
       form.querySelectorAll(".chip").forEach((chip) => {
         chip.classList.toggle("is-selected", value && chip.dataset.carryover === value);
       });
+    };
+
+    const updateContextSelection = (form, field, value) => {
+      if (!form) return;
+      if (value === null || value === undefined || value === "") {
+        delete form.dataset[field];
+      } else {
+        form.dataset[field] = value;
+      }
+      const row = form.querySelector(`[data-context-field=\"${field}\"]`);
+      if (!row) return;
+      row.querySelectorAll(".chip").forEach((chip) => {
+        chip.classList.toggle("is-selected", value && chip.dataset.context === value);
+      });
+    };
+
+    const shouldIncludePhase4 = () => selectedPhases.size === 5 || selectedPhases.has(4);
+
+    const getPostSteps = () => {
+      const steps = ["post_phases", "post_tags", "post_interference"];
+      if (shouldIncludePhase4()) {
+        steps.push("post_phase4");
+      }
+      steps.push("post_anchor", "post_reentry", "review");
+      return steps;
+    };
+
+    const goToNextPostStep = (currentStep) => {
+      const steps = getPostSteps();
+      const index = steps.indexOf(currentStep);
+      if (index >= 0 && index < steps.length - 1) {
+        renderState(steps[index + 1]);
+      }
+    };
+
+    const goToPrevPostStep = (currentStep) => {
+      const steps = getPostSteps();
+      const index = steps.indexOf(currentStep);
+      if (index > 0) {
+        renderState(steps[index - 1]);
+      } else {
+        renderState("inSession");
+      }
+    };
+
+    const renderReview = () => {
+      if (!reviewSummary) return;
+      const phasesText = selectedPhases.size === 5
+        ? "All phases"
+        : selectedPhases.size
+          ? Array.from(selectedPhases).sort().join(", ")
+          : "—";
+      const tagsText = selectedTags.length ? selectedTags.join(", ") : "—";
+      const interferenceText = interferenceLevel || "—";
+      const phase4Text = phase4Estimate || "—";
+      const anchorText = somaticAnchor || "—";
+      const reentryText = reentryAbrupt === null ? "—" : reentryAbrupt ? "yes" : "no";
+      const entryText = entryState || "—";
+      const durationText = frozenDurationSec !== null ? formatDuration(frozenDurationSec) : "—";
+      reviewSummary.innerHTML = `
+        <div><dt>Duration</dt><dd>${durationText}</dd></div>
+        <div><dt>Entry state</dt><dd>${entryText}</dd></div>
+        <div><dt>Phases</dt><dd>${phasesText}</dd></div>
+        <div><dt>Tags</dt><dd>${tagsText}</dd></div>
+        <div><dt>Interference</dt><dd>${interferenceText}</dd></div>
+        <div><dt>Phase 4 stillness</dt><dd>${phase4Text}</dd></div>
+        <div><dt>Somatic anchor</dt><dd>${anchorText}</dd></div>
+        <div><dt>Re-entry abrupt</dt><dd>${reentryText}</dd></div>
+      `;
     };
 
     const renderHistory = async () => {
@@ -633,6 +752,10 @@
         const tagsText = session.tags.length ? session.tags.join(", ") : "—";
         const extraMeta = buildExtraMeta(session);
         const carryoverLabel = session.carryover ? "Edit carryover" : "Log carryover";
+        const hasAllContext = contextFields.every(
+          (field) => session[field] !== undefined && session[field] !== null
+        );
+        const contextLabel = hasAllContext ? "Edit context" : "Add context";
         card.innerHTML = `
           <strong>${date}</strong>
           <div class="history-meta">
@@ -647,6 +770,7 @@
           ` : ""}
           <div class="history-card__actions">
             <button class="button ghost" data-carryover-toggle="${session.id}">${carryoverLabel}</button>
+            <button class="button ghost" data-context-toggle="${session.id}">${contextLabel}</button>
             <button class="button ghost" data-delete="${session.id}">Delete</button>
           </div>
           <div class="carryover-form" data-carryover-form="${session.id}" hidden>
@@ -662,6 +786,56 @@
             <div class="history-card__actions">
               <button class="button primary" data-carryover-save="${session.id}">Save carryover</button>
               <button class="button ghost" data-carryover-cancel="${session.id}">Cancel</button>
+            </div>
+          </div>
+          <div class="context-form" data-context-form="${session.id}" hidden>
+            <div class="field">
+              <h4>Sleep quality</h4>
+              <div class="chip-row" data-context-field="sleepQuality">
+                <button class="chip" data-context="good">good</button>
+                <button class="chip" data-context="okay">okay</button>
+                <button class="chip" data-context="poor / debt">poor / debt</button>
+              </div>
+            </div>
+            <div class="field">
+              <h4>Stress level</h4>
+              <div class="chip-row" data-context-field="stressLevel">
+                <button class="chip" data-context="low">low</button>
+                <button class="chip" data-context="moderate">moderate</button>
+                <button class="chip" data-context="high">high</button>
+              </div>
+            </div>
+            <div class="field">
+              <h4>Day type</h4>
+              <div class="chip-row" data-context-field="dayType">
+                <button class="chip" data-context="workday">workday</button>
+                <button class="chip" data-context="recovery day">recovery day</button>
+                <button class="chip" data-context="travel">travel</button>
+                <button class="chip" data-context="illness">illness</button>
+                <button class="chip" data-context="atypical day">atypical day</button>
+              </div>
+            </div>
+            <div class="field">
+              <h4>Daily life smoother?</h4>
+              <p class="muted">Since this session, did daily life feel smoother?</p>
+              <div class="chip-row" data-context-field="lifeSmoother">
+                <button class="chip" data-context="yes">yes</button>
+                <button class="chip" data-context="neutral">neutral</button>
+                <button class="chip" data-context="no">no</button>
+                <button class="chip" data-context="unclear">unclear</button>
+              </div>
+            </div>
+            <div class="field">
+              <h4>Harder than usual?</h4>
+              <p class="muted">Did anything feel harder than usual today?</p>
+              <div class="chip-row" data-context-field="harderThanUsual">
+                <button class="chip" data-context="yes">yes</button>
+                <button class="chip" data-context="no">no</button>
+              </div>
+            </div>
+            <div class="history-card__actions">
+              <button class="button primary" data-context-save="${session.id}">Save context</button>
+              <button class="button ghost" data-context-cancel="${session.id}">Cancel</button>
             </div>
           </div>
         `;
@@ -691,7 +865,18 @@
       const merged = [...existing];
       data.forEach((session) => {
         const duplicate = existing.find((item) => item.startedAt === session.startedAt);
-        if (!duplicate) {
+        if (duplicate) {
+          const mergedSession = { ...duplicate };
+          Object.entries(session).forEach(([key, value]) => {
+            if (mergedSession[key] === undefined || mergedSession[key] === null) {
+              mergedSession[key] = value;
+            }
+          });
+          const idx = merged.findIndex((item) => item.startedAt === session.startedAt);
+          if (idx >= 0) {
+            merged[idx] = mergedSession;
+          }
+        } else {
           merged.push(session);
         }
       });
@@ -716,16 +901,17 @@
       });
     });
 
-    primaryBtn.addEventListener("click", () => {
-      if (isActiveSession) {
-        endSession();
-      } else {
-        showPrecheckin();
-      }
+    beginFlowBtn.addEventListener("click", () => {
+      clearEntryStateSelection();
+      renderState("entryState");
     });
-    beginBtn.addEventListener("click", () => startSession({ entryStateValue: entryState }));
-    skipEntryBtn.addEventListener("click", () => startSession({ entryStateValue: null }));
-    cancelBtn.addEventListener("click", () => cancelSession({ confirmActive: true }));
+    entryBeginBtn.addEventListener("click", () => renderState("readyCircle"));
+    entrySkipBtn.addEventListener("click", () => {
+      clearEntryStateSelection();
+      renderState("readyCircle");
+    });
+    entryCancelBtn.addEventListener("click", () => cancelSession());
+    readyCancelBtn.addEventListener("click", () => cancelSession());
     saveBtn.addEventListener("click", saveSession);
     discardBtn.addEventListener("click", () => cancelSession());
 
@@ -741,6 +927,9 @@
       const button = event.target.closest(".chip");
       if (!button) return;
       togglePhase(button.dataset.phase);
+      if (selectedPhases.size) {
+        goToNextPostStep("post_phases");
+      }
     });
 
     tagChips.addEventListener("click", (event) => {
@@ -755,6 +944,9 @@
       const value = button.dataset.interference;
       interferenceLevel = interferenceLevel === value ? null : value;
       setSingleChoice(interferenceChips, "interference", interferenceLevel);
+      if (interferenceLevel) {
+        goToNextPostStep("post_interference");
+      }
     });
 
     phase4EstimateChips.addEventListener("click", (event) => {
@@ -763,6 +955,9 @@
       const value = button.dataset.phase4Estimate;
       phase4Estimate = phase4Estimate === value ? null : value;
       setSingleChoice(phase4EstimateChips, "phase4Estimate", phase4Estimate);
+      if (phase4Estimate) {
+        goToNextPostStep("post_phase4");
+      }
     });
 
     somaticAnchorChips.addEventListener("click", (event) => {
@@ -771,6 +966,9 @@
       const value = button.dataset.somaticAnchor;
       somaticAnchor = somaticAnchor === value ? null : value;
       setSingleChoice(somaticAnchorChips, "somaticAnchor", somaticAnchor);
+      if (somaticAnchor) {
+        goToNextPostStep("post_anchor");
+      }
     });
 
     reentryChips.addEventListener("click", (event) => {
@@ -781,6 +979,42 @@
       reentryAbrupt = reentryAbrupt === next ? null : next;
       const selectedValue = reentryAbrupt === null ? null : reentryAbrupt ? "yes" : "no";
       setSingleChoice(reentryChips, "reentry", selectedValue);
+      if (reentryAbrupt !== null) {
+        goToNextPostStep("post_reentry");
+      }
+    });
+
+    tagsContinueBtn.addEventListener("click", () => {
+      goToNextPostStep("post_tags");
+    });
+
+    tagsSkipBtn.addEventListener("click", () => {
+      selectedTags = [];
+      clearChipRow(tagChips);
+      goToNextPostStep("post_tags");
+    });
+
+    practiceView.addEventListener("click", (event) => {
+      const backBtn = event.target.closest("[data-action=\"back\"]");
+      if (backBtn) {
+        goToPrevPostStep(practiceStep);
+      }
+    });
+
+    sessionCircles.forEach((circle) => {
+      circle.addEventListener("click", () => {
+        if (!sessionStartMs) {
+          startSession({ entryStateValue: entryState });
+          return;
+        }
+        if (isActiveSession) {
+          endSession();
+          return;
+        }
+        if (sessionEndMs) {
+          renderState("post_phases");
+        }
+      });
     });
 
     historyList.addEventListener("click", async (event) => {
@@ -852,6 +1086,85 @@
         if (form) {
           form.hidden = true;
         }
+        return;
+      }
+
+      const contextToggleBtn = event.target.closest("button[data-context-toggle]");
+      if (contextToggleBtn) {
+        const id = Number(contextToggleBtn.dataset.contextToggle);
+        const form = historyList.querySelector(`[data-context-form="${id}"]`);
+        const session = sessionCache.get(id);
+        if (!form || !session) return;
+        if (form.hidden) {
+          contextFields.forEach((field) => {
+            const value = session[field];
+            if (field === "harderThanUsual") {
+              const mapped = value === true ? "yes" : value === false ? "no" : null;
+              updateContextSelection(form, field, mapped);
+            } else {
+              updateContextSelection(form, field, value ?? null);
+            }
+          });
+          form.hidden = false;
+        } else {
+          form.hidden = true;
+        }
+        return;
+      }
+
+      const contextChip = event.target.closest("button[data-context]");
+      if (contextChip) {
+        const row = contextChip.closest("[data-context-field]");
+        const form = contextChip.closest("[data-context-form]");
+        if (!row || !form) return;
+        const field = row.dataset.contextField;
+        const value = contextChip.dataset.context;
+        const currentValue = form.dataset[field] || "";
+        const nextValue = currentValue === value ? null : value;
+        updateContextSelection(form, field, nextValue);
+        return;
+      }
+
+      const saveContextBtn = event.target.closest("button[data-context-save]");
+      if (saveContextBtn) {
+        const id = Number(saveContextBtn.dataset.contextSave);
+        const form = historyList.querySelector(`[data-context-form=\"${id}\"]`);
+        const session = sessionCache.get(id);
+        if (!form || !session) return;
+        const now = new Date();
+        const endedAtMs = new Date(session.endedAt).getTime();
+        const delayHours = Number.isFinite(endedAtMs)
+          ? Math.max(0, Math.round((now.getTime() - endedAtMs) / 3600000))
+          : 0;
+        const updates = {};
+        contextFields.forEach((field) => {
+          const value = form.dataset[field] || "";
+          if (!value) {
+            updates[field] = null;
+          } else if (field === "harderThanUsual") {
+            updates[field] = value === "yes";
+          } else {
+            updates[field] = value;
+          }
+        });
+        await ensureDb();
+        await updateSession({
+          ...session,
+          ...updates,
+          contextLoggedAt: now.toISOString(),
+          contextDelayHours: delayHours,
+        });
+        await renderHistory();
+        return;
+      }
+
+      const cancelContextBtn = event.target.closest("button[data-context-cancel]");
+      if (cancelContextBtn) {
+        const id = Number(cancelContextBtn.dataset.contextCancel);
+        const form = historyList.querySelector(`[data-context-form=\"${id}\"]`);
+        if (form) {
+          form.hidden = true;
+        }
       }
     });
 
@@ -898,8 +1211,7 @@
         console.error("IndexedDB init failed:", error);
       });
     renderState("idle");
-    updatePrimaryBtn();
-    setSessionIndicator(false);
+    setCirclePulsing(false);
 
     window.addEventListener("beforeunload", (event) => {
       if (!isActiveSession) return;

@@ -430,6 +430,22 @@ input[type="file"]:focus-visible {
   gap: 1rem;
 }
 
+.practice-screen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.practice-center {
+  align-items: center;
+  text-align: center;
+}
+
+.practice-prompt {
+  color: var(--muted);
+  margin-top: -0.2rem;
+}
+
 .session-indicator {
   display: inline-flex;
   align-items: center;
@@ -471,6 +487,47 @@ input[type="file"]:focus-visible {
 .button-row .button {
   flex: 0 0 auto;
   min-width: 160px;
+}
+
+.session-circle {
+  width: min(280px, 70vw);
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(140deg, var(--accent), var(--accent2));
+  color: #f7f7ff;
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  box-shadow: 0 20px 40px rgba(80, 103, 214, 0.25);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.session-circle:active {
+  transform: scale(0.98);
+  box-shadow: 0 12px 30px rgba(80, 103, 214, 0.2);
+}
+
+.session-circle.is-pulsing {
+  animation: pulse var(--pulse-duration, 4.5s) ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 20px 40px rgba(80, 103, 214, 0.25);
+  }
+  50% {
+    transform: scale(1.03);
+    box-shadow: 0 26px 60px rgba(80, 103, 214, 0.3);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 20px 40px rgba(80, 103, 214, 0.25);
+  }
 }
 
 @media (max-width: 520px) {
@@ -532,6 +589,28 @@ input[type="file"]:focus-visible {
   background: rgba(80, 103, 214, 0.18);
   border-color: rgba(80, 103, 214, 0.4);
   color: #2f3f82;
+}
+
+.review-list {
+  margin: 0;
+  display: grid;
+  gap: var(--s-2);
+}
+
+.review-list div {
+  display: grid;
+  grid-template-columns: minmax(0, 160px) 1fr;
+  gap: var(--s-3);
+  font-size: 0.95rem;
+}
+
+.review-list dt {
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.review-list dd {
+  margin: 0;
 }
 
 .filters {
@@ -597,7 +676,8 @@ select {
   gap: var(--s-3);
 }
 
-.carryover-form {
+.carryover-form,
+.context-form {
   padding-top: var(--s-2);
   border-top: 1px solid rgba(60, 70, 90, 0.12);
 }
