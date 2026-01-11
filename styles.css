@@ -157,6 +157,236 @@ input[type="file"]:focus-visible {
   position: relative;
 }
 
+.protocol-stage {
+  min-height: 100vh;
+  padding: 7rem 1.5rem 5rem;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.protocol-view {
+  width: min(720px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+}
+
+.protocol-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-4);
+}
+
+.protocol-header h1 {
+  color: var(--heading);
+  margin-bottom: var(--s-2);
+}
+
+.protocol-hint {
+  color: var(--muted);
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.protocol-orientation {
+  padding: var(--s-2) var(--s-3);
+  font-size: 0.9rem;
+}
+
+.protocol-banner {
+  border-radius: var(--r-2);
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--border);
+  padding: var(--s-3) var(--s-4);
+  box-shadow: var(--shadow-1);
+  display: grid;
+  gap: var(--s-3);
+}
+
+.protocol-banner__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+}
+
+.protocol-map {
+  position: relative;
+  display: grid;
+  gap: var(--s-4);
+  padding: var(--s-4) 0;
+}
+
+.protocol-map::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: rgba(32, 51, 90, 0.12);
+  transform: translateX(-50%);
+  z-index: 0;
+}
+
+.protocol-node {
+  position: relative;
+  border-radius: var(--r-2);
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.75);
+  padding: var(--s-4) var(--s-5);
+  text-align: left;
+  cursor: pointer;
+  box-shadow: var(--shadow-1);
+  display: grid;
+  gap: var(--s-1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  z-index: 1;
+}
+
+.protocol-node__label {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.protocol-node__title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--heading);
+}
+
+.protocol-node__desc {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 30;
+}
+
+.overlay[hidden] {
+  display: none;
+}
+
+.overlay-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(18, 24, 37, 0.45);
+}
+
+.overlay-card {
+  position: relative;
+  width: min(560px, 90vw);
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: var(--r-3);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-2);
+  padding: var(--s-6);
+  z-index: 1;
+  display: grid;
+  gap: var(--s-4);
+  transform: translateY(8px);
+  opacity: 0;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.overlay.is-visible .overlay-card {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.overlay-close {
+  position: absolute;
+  top: var(--s-4);
+  right: var(--s-4);
+  border: none;
+  background: transparent;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--muted);
+}
+
+.overlay-body p {
+  margin: 0 0 var(--s-3);
+  color: var(--text);
+}
+
+.overlay-muted {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.overlay-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--s-3);
+}
+
+.overlay-actions--between {
+  justify-content: space-between;
+  align-items: center;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .protocol-node:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 32px rgba(43, 49, 66, 0.18);
+  }
+}
+
+@media (max-width: 720px) {
+  .protocol-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .protocol-map::before {
+    left: 24px;
+  }
+
+  .protocol-node {
+    padding-left: calc(var(--s-5) + 12px);
+  }
+
+  .protocol-node::before {
+    content: "";
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: var(--accent2);
+    transform: translateY(-50%);
+  }
+
+  .phase-overlay {
+    align-items: flex-end;
+  }
+
+  .phase-overlay .overlay-card {
+    width: 100%;
+    border-radius: var(--r-2) var(--r-2) 0 0;
+    padding: var(--s-5) var(--s-5) var(--s-6);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .protocol-node,
+  .overlay-card {
+    transition: none;
+  }
+}
+
 .panel {
   max-width: 760px;
   width: 100%;
