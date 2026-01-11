@@ -1,112 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Ayvasa — The Coherence Protocol</title>
-  <link rel="stylesheet" href="styles.css" />
-</head>
-
-<body data-page="home">
-  <div class="splash-overlay" id="splashOverlay">
-    <div class="splash-content">
-      <div class="splash-title">The Coherence Protocol</div>
-      <div class="splash-by">by</div>
-      <div class="splash-brand">AYVASA</div>
-    </div>
-  </div>
-  <header class="site-header">
-    <a class="brand" href="index.html">AYVASA</a>
-    <nav class="site-nav">
-      <a class="button ghost" href="practice.html">Practice</a>
-    </nav>
-  </header>
-
-  <main class="protocol-stage">
-    <section class="protocol-view" aria-labelledby="protocolTitle">
-      <div class="protocol-header">
-        <div>
-          <h1 id="protocolTitle">Protocol</h1>
-          <p class="protocol-hint">Tap a phase to learn more.</p>
-        </div>
-        <button class="button ghost protocol-orientation" id="orientationBtn" type="button">Orientation</button>
-      </div>
-
-      <div class="protocol-banner" id="protocolBanner" hidden>
-        <p>New here? A brief orientation is available.</p>
-        <div class="protocol-banner__actions">
-          <button class="button ghost" id="bannerBegin" type="button">Begin orientation</button>
-          <button class="button ghost" id="bannerDismiss" type="button">Dismiss</button>
-        </div>
-      </div>
-
-      <div class="protocol-map" id="protocolMap">
-        <button class="protocol-node" type="button" data-phase="0">
-          <span class="protocol-node__label">Phase 0</span>
-          <span class="protocol-node__title">Arrival</span>
-          <span class="protocol-node__desc">Settling into the start of practice.</span>
-        </button>
-        <button class="protocol-node" type="button" data-phase="1">
-          <span class="protocol-node__label">Phase 1</span>
-          <span class="protocol-node__title">Settling</span>
-          <span class="protocol-node__desc">Body and attention begin to organize.</span>
-        </button>
-        <button class="protocol-node" type="button" data-phase="2">
-          <span class="protocol-node__label">Phase 2</span>
-          <span class="protocol-node__title">Coherence</span>
-          <span class="protocol-node__desc">Breath, body, and awareness align.</span>
-        </button>
-        <button class="protocol-node" type="button" data-phase="3">
-          <span class="protocol-node__label">Phase 3</span>
-          <span class="protocol-node__title">Quieting</span>
-          <span class="protocol-node__desc">Less interference; more stability.</span>
-        </button>
-        <button class="protocol-node" type="button" data-phase="4">
-          <span class="protocol-node__label">Phase 4</span>
-          <span class="protocol-node__title">Stillness</span>
-          <span class="protocol-node__desc">Stillness becomes available without effort.</span>
-        </button>
-      </div>
-    </section>
-  </main>
-
-  <div class="overlay phase-overlay" id="phaseOverlay" hidden>
-    <div class="overlay-scrim" data-overlay-close></div>
-    <div class="overlay-card" role="dialog" aria-modal="true" aria-labelledby="phaseOverlayTitle">
-      <button class="overlay-close" type="button" aria-label="Close" data-overlay-close>&times;</button>
-      <h2 id="phaseOverlayTitle"></h2>
-      <div class="overlay-body">
-        <p class="phase-description" id="phaseOverlayDescription"></p>
-        <div class="phase-instructions">
-          <button class="button ghost phase-instructions__toggle" type="button" id="phaseInstructionsToggle"
-            aria-expanded="false" aria-controls="phaseInstructionsContent">
-            Show instructions
-          </button>
-          <div class="phase-instructions__content" id="phaseInstructionsContent" hidden></div>
-        </div>
-      </div>
-      <p class="overlay-muted">This is a map, not a ladder.</p>
-      <div class="overlay-actions">
-        <button class="button ghost" type="button" data-overlay-close>Close</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="overlay onboarding-overlay" id="onboardingOverlay" hidden>
-    <div class="overlay-scrim" data-onboarding-close></div>
-    <div class="overlay-card" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle">
-      <button class="overlay-close" type="button" aria-label="Close" data-onboarding-close>&times;</button>
-      <h2 id="onboardingTitle"></h2>
-      <div class="overlay-body" id="onboardingBody"></div>
-      <div class="overlay-actions overlay-actions--between">
-        <button class="button ghost" type="button" id="onboardingSkip">Skip orientation</button>
-        <button class="button primary" type="button" id="onboardingNext">Next</button>
-      </div>
-    </div>
-  </div>
-
-  <script src="app.js"></script>
-</body>
-
-</html>
+ 
+ <head>
+   <meta charset="UTF-8" />
+   <meta name="viewport" content="width=device-width, initial-scale=1" />
+   <title>Ayvasa — The Coherence Protocol</title>
++  <link rel="manifest" href="/manifest.webmanifest" />
++  <meta name="theme-color" content="#0e1116" />
++  <!-- iOS support -->
++  <meta name="apple-mobile-web-app-capable" content="yes" />
++  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
++  <meta name="apple-mobile-web-app-title" content="Ayvasa" />
+   <link rel="stylesheet" href="styles.css" />
+ </head>
+ 
+ <body data-page="home">
+   <div class="splash-overlay" id="splashOverlay">
+     <div class="splash-content">
+       <div class="splash-title">The Coherence Protocol</div>
+       <div class="splash-by">by</div>
+       <div class="splash-brand">AYVASA</div>
+     </div>
+   </div>
+   <header class="site-header">
+     <a class="brand" href="index.html">AYVASA</a>
+     <nav class="site-nav">
+       <a class="button ghost" href="practice.html">Practice</a>
+     </nav>
+   </header>
+ 
+   <main class="protocol-stage">
+     <section class="protocol-view" aria-labelledby="protocolTitle">
+       <div class="protocol-header">
+         <div>
+           <h1 id="protocolTitle">Protocol</h1>
+           <p class="protocol-hint">Tap a phase to learn more.</p>
+         </div>
