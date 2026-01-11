@@ -234,12 +234,10 @@
     const viewButtons = document.querySelectorAll(".segmented__tab");
     const views = document.querySelectorAll(".view");
     const beginFlowBtn = document.getElementById("beginFlow");
-    const entryBeginBtn = document.getElementById("entryBegin");
     const entrySkipBtn = document.getElementById("entrySkip");
     const entryCancelBtn = document.getElementById("entryCancel");
     const readyCancelBtn = document.getElementById("readyCancel");
     const tagsContinueBtn = document.getElementById("tagsContinue");
-    const tagsSkipBtn = document.getElementById("tagsSkip");
     const saveBtn = document.getElementById("saveSession");
     const discardBtn = document.getElementById("discardSession");
     const reviewSummary = document.getElementById("reviewSummary");
@@ -267,6 +265,7 @@
     let sessionEndMs = null;
     let frozenDurationSec = null;
     let selectedPhases = new Set();
+    let allPhasesSelected = false;
     let selectedTags = [];
     let isActiveSession = false;
     let dbReady = false;
@@ -371,6 +370,9 @@
       if (state === "review") {
         renderReview();
       }
+      if (state === "post_tags") {
+        updateTagsButtonState();
+      }
       if (state === "inSession" && sessionTitle && sessionPrompt) {
         if (isActiveSession) {
           sessionTitle.textContent = "Session in progress";
@@ -407,6 +409,7 @@
 
     const clearCheckinSelections = () => {
       selectedPhases = new Set();
+      allPhasesSelected = false;
       selectedTags = [];
       interferenceLevel = null;
       phase4Estimate = null;
@@ -530,7 +533,7 @@
         startedAt: new Date(sessionStartMs).toISOString(),
         endedAt: new Date(sessionEndMs).toISOString(),
         durationSec: frozenDurationSec,
-        phases: Array.from(selectedPhases).sort(),
+        phases: allPhasesSelected ? [0, 1, 2, 3, 4] : Array.from(selectedPhases).sort(),
         tags: [...selectedTags],
       };
       if (entryState) {
@@ -555,27 +558,40 @@
       await renderHistory();
     };
 
-    const togglePhase = (phase) => {
-      if (phase === "all") {
-        selectedPhases = new Set([0, 1, 2, 3, 4]);
-        phaseChips.querySelectorAll(".chip").forEach((chip) => {
-          chip.classList.toggle("is-selected", chip.dataset.phase !== undefined);
-        });
-        return;
-      }
-      const num = Number(phase);
-      if (selectedPhases.has(num)) {
-        selectedPhases.delete(num);
-      } else {
-        selectedPhases.add(num);
-      }
+    const updatePhaseChips = () => {
+      if (!phaseChips) return;
       phaseChips.querySelectorAll(".chip").forEach((chip) => {
         if (chip.dataset.phase === "all") {
-          chip.classList.toggle("is-selected", selectedPhases.size === 5);
+          chip.classList.toggle("is-selected", allPhasesSelected);
         } else if (chip.dataset.phase) {
-          chip.classList.toggle("is-selected", selectedPhases.has(Number(chip.dataset.phase)));
+          chip.classList.toggle(
+            "is-selected",
+            !allPhasesSelected && selectedPhases.has(Number(chip.dataset.phase))
+          );
         }
       });
+    };
+
+    const togglePhase = (phase) => {
+      if (phase === "all") {
+        allPhasesSelected = !allPhasesSelected;
+        if (allPhasesSelected) {
+          selectedPhases.clear();
+        }
+        updatePhaseChips();
+      } else {
+        if (allPhasesSelected) {
+          allPhasesSelected = false;
+          selectedPhases.clear();
+        }
+        const num = Number(phase);
+        if (selectedPhases.has(num)) {
+          selectedPhases.delete(num);
+        } else {
+          selectedPhases.add(num);
+        }
+        updatePhaseChips();
+      }
       if (!shouldIncludePhase4()) {
         phase4Estimate = null;
         clearChipRow(phase4EstimateChips);
@@ -587,13 +603,14 @@
         selectedTags = selectedTags.filter((item) => item !== tag);
       } else {
         if (selectedTags.length >= 2) {
-          selectedTags.shift();
+          return false;
         }
         selectedTags.push(tag);
       }
       tagChips.querySelectorAll(".chip").forEach((chip) => {
         chip.classList.toggle("is-selected", selectedTags.includes(chip.dataset.tag));
       });
+      return true;
     };
 
     const applyFilters = (sessions) => {
@@ -674,7 +691,16 @@
       });
     };
 
-    const shouldIncludePhase4 = () => selectedPhases.size === 5 || selectedPhases.has(4);
+    const shouldIncludePhase4 = () => allPhasesSelected || selectedPhases.has(4);
+
+    const hasValidPhaseSelection = () => allPhasesSelected || selectedPhases.size > 0;
+
+    const hasValidTagSelection = () => selectedTags.length > 0 && selectedTags.length <= 2;
+
+    const updateTagsButtonState = () => {
+      if (!tagsContinueBtn) return;
+      tagsContinueBtn.disabled = !hasValidTagSelection();
+    };
 
     const getPostSteps = () => {
       const steps = ["post_phases", "post_tags", "post_interference"];
@@ -705,7 +731,7 @@
 
     const renderReview = () => {
       if (!reviewSummary) return;
-      const phasesText = selectedPhases.size === 5
+      const phasesText = allPhasesSelected
         ? "All phases"
         : selectedPhases.size
           ? Array.from(selectedPhases).sort().join(", ")
@@ -756,6 +782,8 @@
           (field) => session[field] !== undefined && session[field] !== null
         );
         const contextLabel = hasAllContext ? "Edit context" : "Add context";
+        const showToggle = extraMeta.length > 0;
+        const toggleLabel = "View more";
         card.innerHTML = `
           <strong>${date}</strong>
           <div class="history-meta">
@@ -763,12 +791,13 @@
             <span>Phases: ${phasesText}</span>
             <span>Tags: ${tagsText}</span>
           </div>
-          ${extraMeta.length ? `
-            <div class="history-meta history-meta--secondary">
+          ${showToggle ? `
+            <div class="history-meta history-meta--secondary" data-extra-meta="${session.id}" hidden>
               ${extraMeta.map((item) => `<span>${item}</span>`).join("")}
             </div>
           ` : ""}
           <div class="history-card__actions">
+            ${showToggle ? `<button class="button ghost" data-meta-toggle="${session.id}">${toggleLabel}</button>` : ""}
             <button class="button ghost" data-carryover-toggle="${session.id}">${carryoverLabel}</button>
             <button class="button ghost" data-context-toggle="${session.id}">${contextLabel}</button>
             <button class="button ghost" data-delete="${session.id}">Delete</button>
@@ -817,7 +846,6 @@
             </div>
             <div class="field">
               <h4>Daily life smoother?</h4>
-              <p class="muted">Since this session, did daily life feel smoother?</p>
               <div class="chip-row" data-context-field="lifeSmoother">
                 <button class="chip" data-context="yes">yes</button>
                 <button class="chip" data-context="neutral">neutral</button>
@@ -827,7 +855,6 @@
             </div>
             <div class="field">
               <h4>Harder than usual?</h4>
-              <p class="muted">Did anything feel harder than usual today?</p>
               <div class="chip-row" data-context-field="harderThanUsual">
                 <button class="chip" data-context="yes">yes</button>
                 <button class="chip" data-context="no">no</button>
@@ -905,7 +932,6 @@
       clearEntryStateSelection();
       renderState("entryState");
     });
-    entryBeginBtn.addEventListener("click", () => renderState("readyCircle"));
     entrySkipBtn.addEventListener("click", () => {
       clearEntryStateSelection();
       renderState("readyCircle");
@@ -919,15 +945,16 @@
       const button = event.target.closest(".chip");
       if (!button) return;
       const value = button.dataset.entryState;
-      entryState = entryState === value ? null : value;
+      entryState = value;
       setSingleChoice(entryStateChips, "entryState", entryState);
+      renderState("readyCircle");
     });
 
     phaseChips.addEventListener("click", (event) => {
       const button = event.target.closest(".chip");
       if (!button) return;
       togglePhase(button.dataset.phase);
-      if (selectedPhases.size) {
+      if (hasValidPhaseSelection()) {
         goToNextPostStep("post_phases");
       }
     });
@@ -935,7 +962,13 @@
     tagChips.addEventListener("click", (event) => {
       const button = event.target.closest(".chip");
       if (!button) return;
-      toggleTag(button.dataset.tag);
+      const beforeCount = selectedTags.length;
+      const didToggle = toggleTag(button.dataset.tag);
+      if (!didToggle) return;
+      updateTagsButtonState();
+      if (selectedTags.length === 2 && beforeCount < 2) {
+        goToNextPostStep("post_tags");
+      }
     });
 
     interferenceChips.addEventListener("click", (event) => {
@@ -985,12 +1018,7 @@
     });
 
     tagsContinueBtn.addEventListener("click", () => {
-      goToNextPostStep("post_tags");
-    });
-
-    tagsSkipBtn.addEventListener("click", () => {
-      selectedTags = [];
-      clearChipRow(tagChips);
+      if (!hasValidTagSelection()) return;
       goToNextPostStep("post_tags");
     });
 
@@ -1018,6 +1046,17 @@
     });
 
     historyList.addEventListener("click", async (event) => {
+      const metaToggleBtn = event.target.closest("button[data-meta-toggle]");
+      if (metaToggleBtn) {
+        const id = Number(metaToggleBtn.dataset.metaToggle);
+        const meta = historyList.querySelector(`[data-extra-meta="${id}"]`);
+        if (!meta) return;
+        const willShow = meta.hidden;
+        meta.hidden = !willShow;
+        metaToggleBtn.textContent = willShow ? "View" : "View more";
+        return;
+      }
+
       const deleteBtn = event.target.closest("button[data-delete]");
       if (deleteBtn) {
         const id = Number(deleteBtn.dataset.delete);
@@ -1204,6 +1243,8 @@
       }
       return dbInitPromise;
     };
+
+    updateTagsButtonState();
 
     ensureDb()
       .then(renderHistory)
