@@ -13,7 +13,9 @@
 
     const phaseOverlay = document.getElementById("phaseOverlay");
     const phaseOverlayTitle = document.getElementById("phaseOverlayTitle");
-    const phaseOverlayBody = document.getElementById("phaseOverlayBody");
+    const phaseOverlayDescription = document.getElementById("phaseOverlayDescription");
+    const phaseInstructionsToggle = document.getElementById("phaseInstructionsToggle");
+    const phaseInstructionsContent = document.getElementById("phaseInstructionsContent");
     const onboardingOverlay = document.getElementById("onboardingOverlay");
     const onboardingTitle = document.getElementById("onboardingTitle");
     const onboardingBody = document.getElementById("onboardingBody");
@@ -24,45 +26,73 @@
     const bannerBegin = document.getElementById("bannerBegin");
     const bannerDismiss = document.getElementById("bannerDismiss");
 
-    const phaseCopy = {
+    const PROTOCOL_PHASES = {
       0: {
         title: "Arrival",
-        lines: [
-          "Begin without forcing anything to happen.",
-          "The first shift is often simply reduction of urgency.",
-          "If the system feels busy, that’s not failure—just the starting condition.",
+        description: "Settling into the start of practice.",
+        preparation: [
+          "Choose neutral conditions (quiet helps, not required). Devices off / airplane mode.",
+          "Sit upright or lie down. Spine long, chin slightly tucked, hands relaxed.",
+          "Tongue rests lightly on the palate (behind upper front teeth). No pressure.",
+          "Optional internal whisper: “I am preparing the field.”",
+        ],
+        instructions: [
+          "Inhale (nose) 6s. Exhale (nose) 6s.",
+          "Repeat 12–16 cycles (~2 minutes).",
+          "Let the belly rise gently; chest stays soft.",
+          "Lightly notice the exhale (softening as breath leaves).",
+          "Don’t deepen the breath. Let rhythm do the work.",
         ],
       },
       1: {
         title: "Settling",
-        lines: [
-          "Attention starts to rest more naturally.",
-          "Body signals may become clearer or quieter.",
-          "Let settling occur; don’t try to manage it.",
+        description: "Body and attention begin to organize.",
+        instructions: [
+          "Inhale (nose) 4s.",
+          "Exhale 6s with a gentle hum: “mmm”.",
+          "Repeat 20–24 rounds (~4 minutes).",
+          "Hum is low volume (barely audible is enough).",
+          "Tongue stays resting on palate.",
+          "Rest attention in resonance (no analysis, no story).",
         ],
       },
       2: {
         title: "Coherence",
-        lines: [
-          "Breath, body, and awareness begin to align.",
-          "Effort often drops here—sometimes subtly.",
-          "Coherence can feel ordinary. Ordinary is fine.",
+        description: "Breath, body, and awareness align.",
+        instructions: [
+          "Inhale 4s. Exhale 6s.",
+          "After exhale: gentle pause ~2s (not a hold—just the moment after the breath ends).",
+          "Repeat 30 cycles (~6 minutes).",
+          "During the pause: let breath dissolve; heartbeat goes peripheral; mind “hangs open”.",
+          "If the pause feels strained, shorten it. If it disappears naturally, let it.",
         ],
       },
       3: {
         title: "Quieting",
-        lines: [
-          "Interference may arise less often or feel less sticky.",
-          "Stability matters more than intensity.",
-          "If thoughts appear, let them pass without commentary.",
+        description: "Less interference; more stability.",
+        instructions: [
+          "Let breathing become natural (no counting).",
+          "Move attention: Palate → Sinuses → Brow → Crown → Chest.",
+          "1–2 seconds each point. Sense micro-resonance (vibration/warmth/pressure/spaciousness).",
+          "Whisper internally: “open” → release immediately → move on.",
+          "Don’t linger at “strong” points. If faint/unclear, continue anyway.",
         ],
       },
       4: {
         title: "Stillness",
-        lines: [
-          "Stillness can appear briefly or not at all.",
-          "Don’t chase it. Don’t hold it.",
-          "If it shows up, let it be simple.",
+        description: "Stillness becomes available without effort.",
+        instructions: [
+          "Drop effort.",
+          "Rest attention in the subtle gap behind the palate (quieter space behind the contact point).",
+          "Allow whatever arises without reaction.",
+          "Don’t try to maintain stillness; don’t check if it’s working.",
+          "Keep it brief: ~2 minutes if newer; up to ~6 if appropriate.",
+        ],
+        grounding: [
+          "Return to a few soft exhales, optionally with gentle humming, for 10–15 cycles (~3 minutes).",
+          "Wiggle hands/feet. Feel contact with chair/floor.",
+          "Open eyes slowly. Re-enter activity without commentary.",
+          "Grounding is not optional.",
         ],
       },
     };
@@ -125,16 +155,46 @@
       });
     };
 
+    const renderInstructionSection = (title, items) => {
+      const section = document.createElement("div");
+      section.className = "phase-instructions__section";
+      if (title) {
+        const heading = document.createElement("h3");
+        heading.className = "phase-instructions__title";
+        heading.textContent = title;
+        section.appendChild(heading);
+      }
+      const list = document.createElement("ul");
+      list.className = "phase-instructions__list";
+      items.forEach((item) => {
+        const bullet = document.createElement("li");
+        bullet.textContent = item;
+        list.appendChild(bullet);
+      });
+      section.appendChild(list);
+      return section;
+    };
+
+    const setInstructionsExpanded = (expanded) => {
+      phaseInstructionsToggle.setAttribute("aria-expanded", expanded ? "true" : "false");
+      phaseInstructionsToggle.textContent = expanded ? "Hide instructions" : "Show instructions";
+      phaseInstructionsContent.hidden = !expanded;
+    };
+
     const openPhaseOverlay = (phase) => {
-      const info = phaseCopy[phase];
+      const info = PROTOCOL_PHASES[phase];
       if (!info) return;
       phaseOverlayTitle.textContent = `Phase ${phase} — ${info.title}`;
-      phaseOverlayBody.innerHTML = "";
-      info.lines.forEach((line) => {
-        const paragraph = document.createElement("p");
-        paragraph.textContent = line;
-        phaseOverlayBody.appendChild(paragraph);
-      });
+      phaseOverlayDescription.textContent = info.description;
+      phaseInstructionsContent.innerHTML = "";
+      if (info.preparation) {
+        phaseInstructionsContent.appendChild(renderInstructionSection("Preparation", info.preparation));
+      }
+      phaseInstructionsContent.appendChild(renderInstructionSection(info.title, info.instructions));
+      if (info.grounding) {
+        phaseInstructionsContent.appendChild(renderInstructionSection("Grounding", info.grounding));
+      }
+      setInstructionsExpanded(false);
       setOverlayVisible(phaseOverlay, true);
     };
 
@@ -173,6 +233,11 @@
       const phase = Number(node.dataset.phase);
       if (!Number.isFinite(phase)) return;
       openPhaseOverlay(phase);
+    });
+
+    phaseInstructionsToggle.addEventListener("click", () => {
+      const expanded = phaseInstructionsToggle.getAttribute("aria-expanded") === "true";
+      setInstructionsExpanded(!expanded);
     });
 
     document.addEventListener("click", (event) => {

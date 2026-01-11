@@ -319,6 +319,42 @@ input[type="file"]:focus-visible {
   color: var(--text);
 }
 
+.phase-description {
+  margin: 0;
+  color: var(--text);
+}
+
+.phase-instructions {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.phase-instructions__toggle {
+  justify-self: flex-start;
+}
+
+.phase-instructions__content {
+  display: grid;
+  gap: var(--s-4);
+  padding-top: var(--s-2);
+}
+
+.phase-instructions__title {
+  font-size: 1rem;
+  color: var(--heading);
+  margin: 0 0 var(--s-2);
+}
+
+.phase-instructions__list {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: var(--text);
+}
+
+.phase-instructions__list li {
+  margin: 0 0 var(--s-2);
+}
+
 .overlay-muted {
   color: var(--muted);
   font-size: 0.9rem;
