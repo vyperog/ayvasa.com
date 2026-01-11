@@ -682,6 +682,14 @@ select {
   border-top: 1px solid rgba(60, 70, 90, 0.12);
 }
 
+.context-form .field:last-of-type {
+  margin-bottom: var(--s-3);
+}
+
+.context-form .history-card__actions {
+  margin-top: var(--s-3);
+}
+
 .file-input {
   position: relative;
   overflow: hidden;
