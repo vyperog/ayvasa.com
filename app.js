@@ -8,226 +8,216 @@
   };
 
   const setupHome = () => {
-    const panels = Array.from(document.querySelectorAll(".panel"));
-    if (!panels.length) return;
+    const map = document.getElementById("protocolMap");
+    if (!map) return;
 
-    const progressFill = document.getElementById("progressFill");
-    const panelCount = document.getElementById("panelCount");
-    const prevBtn = document.getElementById("prevBtn");
-    const nextBtn = document.getElementById("nextBtn");
-    const playPauseBtn = document.getElementById("playPauseBtn");
-    const stopBtn = document.getElementById("stopBtn");
+    const phaseOverlay = document.getElementById("phaseOverlay");
+    const phaseOverlayTitle = document.getElementById("phaseOverlayTitle");
+    const phaseOverlayBody = document.getElementById("phaseOverlayBody");
+    const onboardingOverlay = document.getElementById("onboardingOverlay");
+    const onboardingTitle = document.getElementById("onboardingTitle");
+    const onboardingBody = document.getElementById("onboardingBody");
+    const onboardingNext = document.getElementById("onboardingNext");
+    const onboardingSkip = document.getElementById("onboardingSkip");
+    const orientationBtn = document.getElementById("orientationBtn");
+    const banner = document.getElementById("protocolBanner");
+    const bannerBegin = document.getElementById("bannerBegin");
+    const bannerDismiss = document.getElementById("bannerDismiss");
 
-    const totalPanels = panels.length;
-    let currentIndex = 0;
-    let autoplay = true;
-    let stopped = false;
-    let startTime = 0;
-    let rafId = null;
-    let timeoutId = null;
-
-    const setButtonState = () => {
-      playPauseBtn.classList.remove("is-playing", "is-paused", "is-replay");
-      if (currentIndex === totalPanels - 1 && stopped) {
-        playPauseBtn.classList.add("is-replay");
-        playPauseBtn.setAttribute("aria-label", "Replay");
-        return;
-      }
-      if (autoplay && !stopped) {
-        playPauseBtn.classList.add("is-playing");
-        playPauseBtn.setAttribute("aria-label", "Pause");
-      } else {
-        playPauseBtn.classList.add("is-paused");
-        playPauseBtn.setAttribute("aria-label", "Play");
-      }
+    const phaseCopy = {
+      0: {
+        title: "Arrival",
+        lines: [
+          "Begin without forcing anything to happen.",
+          "The first shift is often simply reduction of urgency.",
+          "If the system feels busy, that’s not failure—just the starting condition.",
+        ],
+      },
+      1: {
+        title: "Settling",
+        lines: [
+          "Attention starts to rest more naturally.",
+          "Body signals may become clearer or quieter.",
+          "Let settling occur; don’t try to manage it.",
+        ],
+      },
+      2: {
+        title: "Coherence",
+        lines: [
+          "Breath, body, and awareness begin to align.",
+          "Effort often drops here—sometimes subtly.",
+          "Coherence can feel ordinary. Ordinary is fine.",
+        ],
+      },
+      3: {
+        title: "Quieting",
+        lines: [
+          "Interference may arise less often or feel less sticky.",
+          "Stability matters more than intensity.",
+          "If thoughts appear, let them pass without commentary.",
+        ],
+      },
+      4: {
+        title: "Stillness",
+        lines: [
+          "Stillness can appear briefly or not at all.",
+          "Don’t chase it. Don’t hold it.",
+          "If it shows up, let it be simple.",
+        ],
+      },
     };
 
-    const updateHash = () => {
-      history.replaceState(null, "", `#panel-${currentIndex + 1}`);
-    };
+    const onboardingScreens = [
+      {
+        title: "Welcome",
+        body: "This app is for tracking coherence practice—\nnot for perfecting meditation.\n\nYou don’t need to learn anything here before you begin.\nThis orientation is simply to help you relate to the protocol and the app with less effort.",
+      },
+      {
+        title: "About the protocol",
+        body: "The coherence protocol is not a ladder and not a sequence to master.\n\nThe phases describe patterns that may appear as the nervous system settles.\nThey don’t need to unfold in order—and they don’t need to appear at all.",
+      },
+      {
+        title: "About practice",
+        body: "Practice is not about holding states, reaching stillness, or doing it right.\n\nWhat matters most is how practice shows up after the session—\nin daily life, transitions, and moments of pressure.\n\nThis app tracks those patterns quietly, without scoring or comparison.",
+      },
+      {
+        title: "Using the protocol map",
+        body: "The map shows all phases at once so you can orient without moving through them.\n\nYou can tap any phase to learn more—or ignore the map entirely and just practice.\nNothing here needs to be remembered.\n\nYou can revisit this orientation at any time.",
+      },
+    ];
 
-    const updatePanelDisplay = () => {
-      panels.forEach((panel, index) => {
-        const isActive = index === currentIndex;
-        panel.style.display = isActive ? "block" : "none";
-        panel.setAttribute("aria-hidden", String(!isActive));
-      });
-      panelCount.textContent = `${currentIndex + 1} of ${totalPanels}`;
-      updateHash();
-      resetProgress();
-      setButtonState();
-    };
+    let onboardingIndex = 0;
 
-    const resetProgress = () => {
-      if (!progressFill) return;
-      progressFill.style.width = "0%";
-    };
+    const getFlag = (key) => window.localStorage.getItem(key) === "true";
+    const setFlag = (key, value) => window.localStorage.setItem(key, value ? "true" : "false");
 
-    const setProgress = (ratio) => {
-      if (!progressFill) return;
-      progressFill.style.width = `${Math.min(ratio, 1) * 100}%`;
-    };
-
-    const stopAutoplay = () => {
-      autoplay = false;
-      stopped = true;
-      if (rafId) {
-        cancelAnimationFrame(rafId);
-      }
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-        timeoutId = null;
-      }
-      resetProgress();
-      setButtonState();
-    };
-
-    const pauseAutoplay = () => {
-      autoplay = false;
-      if (rafId) {
-        cancelAnimationFrame(rafId);
-      }
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-        timeoutId = null;
-      }
-      setButtonState();
-    };
-
-    const startAutoplay = () => {
-      if (stopped && currentIndex === totalPanels - 1) {
-        currentIndex = 0;
-        stopped = false;
-        updatePanelDisplay();
-      }
-      autoplay = true;
-      stopped = false;
-      startTime = performance.now();
-      setButtonState();
-      if (prefersReducedMotion) {
-        const panel = panels[currentIndex];
-        const duration = Number(panel.dataset.duration) || 15000;
-        timeoutId = setTimeout(() => goNext(false), duration);
-      } else {
-        rafId = requestAnimationFrame(step);
-      }
-    };
-
-    const step = (timestamp) => {
-      if (!autoplay) return;
-      const panel = panels[currentIndex];
-      const duration = Number(panel.dataset.duration) || 15000;
-      const elapsed = timestamp - startTime;
-      if (!prefersReducedMotion) {
-        setProgress(elapsed / duration);
-      }
-      if (elapsed >= duration) {
-        goNext();
-        return;
-      }
-      rafId = requestAnimationFrame(step);
-    };
-
-    const goTo = (index, { manual = false } = {}) => {
-      currentIndex = Math.max(0, Math.min(index, totalPanels - 1));
-      updatePanelDisplay();
-      if (manual) {
-        pauseAutoplay();
-      }
-    };
-
-    const goNext = (manual = false) => {
-      if (currentIndex < totalPanels - 1) {
-        currentIndex += 1;
-        updatePanelDisplay();
-        if (autoplay) {
-          if (prefersReducedMotion) {
-            if (timeoutId) {
-              clearTimeout(timeoutId);
-            }
-            const panel = panels[currentIndex];
-            const duration = Number(panel.dataset.duration) || 15000;
-            timeoutId = setTimeout(() => goNext(false), duration);
-          } else {
-            startTime = performance.now();
-            rafId = requestAnimationFrame(step);
-          }
+    const setOverlayVisible = (overlay, visible) => {
+      if (!overlay) return;
+      if (visible) {
+        overlay.hidden = false;
+        if (prefersReducedMotion) {
+          overlay.classList.add("is-visible");
+        } else {
+          requestAnimationFrame(() => overlay.classList.add("is-visible"));
         }
-      } else {
-        stopAutoplay();
-      }
-      if (manual) {
-        pauseAutoplay();
-      }
-    };
-
-    const goPrev = (manual = false) => {
-      if (currentIndex > 0) {
-        currentIndex -= 1;
-        updatePanelDisplay();
-      }
-      if (manual) {
-        pauseAutoplay();
-      }
-    };
-
-    prevBtn.addEventListener("click", () => goPrev(true));
-    nextBtn.addEventListener("click", () => goNext(true));
-    stopBtn.addEventListener("click", () => stopAutoplay());
-    playPauseBtn.addEventListener("click", () => {
-      if (stopped && currentIndex === totalPanels - 1) {
-        startAutoplay();
         return;
       }
-      if (autoplay) {
-        pauseAutoplay();
+      overlay.classList.remove("is-visible");
+      if (prefersReducedMotion) {
+        overlay.hidden = true;
+        return;
+      }
+      const card = overlay.querySelector(".overlay-card");
+      const onEnd = (event) => {
+        if (event.target !== card) return;
+        overlay.hidden = true;
+        overlay.removeEventListener("transitionend", onEnd);
+      };
+      overlay.addEventListener("transitionend", onEnd);
+    };
+
+    const renderParagraphs = (container, text) => {
+      container.innerHTML = "";
+      text.split("\n\n").forEach((chunk) => {
+        const paragraph = document.createElement("p");
+        paragraph.textContent = chunk.replace(/\n/g, " ");
+        container.appendChild(paragraph);
+      });
+    };
+
+    const openPhaseOverlay = (phase) => {
+      const info = phaseCopy[phase];
+      if (!info) return;
+      phaseOverlayTitle.textContent = `Phase ${phase} — ${info.title}`;
+      phaseOverlayBody.innerHTML = "";
+      info.lines.forEach((line) => {
+        const paragraph = document.createElement("p");
+        paragraph.textContent = line;
+        phaseOverlayBody.appendChild(paragraph);
+      });
+      setOverlayVisible(phaseOverlay, true);
+    };
+
+    const closePhaseOverlay = () => setOverlayVisible(phaseOverlay, false);
+
+    const updateOnboardingScreen = () => {
+      const screen = onboardingScreens[onboardingIndex];
+      if (!screen) return;
+      onboardingTitle.textContent = screen.title;
+      renderParagraphs(onboardingBody, screen.body);
+      if (onboardingIndex === onboardingScreens.length - 1) {
+        onboardingNext.textContent = "Close";
       } else {
-        startAutoplay();
+        onboardingNext.textContent = "Next";
+      }
+    };
+
+    const openOnboarding = () => {
+      onboardingIndex = 0;
+      updateOnboardingScreen();
+      setOverlayVisible(onboardingOverlay, true);
+    };
+
+    const closeOnboarding = ({ completed = false } = {}) => {
+      if (completed) {
+        setFlag("protocolOnboardingCompleted", true);
+      }
+      setFlag("protocolOnboardingDismissed", true);
+      banner.hidden = true;
+      setOverlayVisible(onboardingOverlay, false);
+    };
+
+    map.addEventListener("click", (event) => {
+      const node = event.target.closest(".protocol-node");
+      if (!node) return;
+      const phase = Number(node.dataset.phase);
+      if (!Number.isFinite(phase)) return;
+      openPhaseOverlay(phase);
+    });
+
+    document.addEventListener("click", (event) => {
+      if (event.target.closest("[data-overlay-close]")) {
+        closePhaseOverlay();
+      }
+      if (event.target.closest("[data-onboarding-close]")) {
+        closeOnboarding();
       }
     });
 
     document.addEventListener("keydown", (event) => {
-      if (["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName)) return;
-      if (event.code === "ArrowLeft") {
-        goPrev(true);
-      }
-      if (event.code === "ArrowRight") {
-        goNext(true);
-      }
-      if (event.code === "Space") {
-        event.preventDefault();
-        if (autoplay) {
-          pauseAutoplay();
-        } else {
-          startAutoplay();
+      if (event.code === "Escape") {
+        if (phaseOverlay && !phaseOverlay.hidden) {
+          closePhaseOverlay();
+        }
+        if (onboardingOverlay && !onboardingOverlay.hidden) {
+          closeOnboarding();
         }
       }
-      if (event.code === "KeyS") {
-        stopAutoplay();
+    });
+
+    onboardingNext.addEventListener("click", () => {
+      if (onboardingIndex < onboardingScreens.length - 1) {
+        onboardingIndex += 1;
+        updateOnboardingScreen();
+      } else {
+        closeOnboarding({ completed: true });
       }
     });
 
-    window.addEventListener("hashchange", () => {
-      const match = window.location.hash.match(/panel-(\d+)/);
-      if (match) {
-        const idx = Number(match[1]) - 1;
-        goTo(idx, { manual: true });
-      }
+    onboardingSkip.addEventListener("click", () => {
+      closeOnboarding();
     });
 
-    const initialHash = window.location.hash.match(/panel-(\d+)/);
-    if (initialHash) {
-      currentIndex = Math.max(0, Math.min(Number(initialHash[1]) - 1, totalPanels - 1));
-      autoplay = false;
-      stopped = false;
-    }
+    orientationBtn.addEventListener("click", openOnboarding);
+    bannerBegin.addEventListener("click", openOnboarding);
+    bannerDismiss.addEventListener("click", () => {
+      setFlag("protocolOnboardingDismissed", true);
+      banner.hidden = true;
+    });
 
-    updatePanelDisplay();
-    if (autoplay) {
-      startAutoplay();
-    } else {
-      setButtonState();
-    }
+    const dismissed = getFlag("protocolOnboardingDismissed");
+    const completed = getFlag("protocolOnboardingCompleted");
+    banner.hidden = dismissed || completed;
   };
 
   const setupPractice = () => {
