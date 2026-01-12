@@ -18,47 +18,31 @@
 
   const setupInstallPromo = () => {
     const promo = document.getElementById("installPromo");
-    if (!promo) return;
-
-    const primaryBtn = document.getElementById("installPromoPrimary");
+    const installBtn = document.getElementById("installPromoPrimary");
     const dismissBtn = document.getElementById("installPromoDismiss");
 
-    if (!primaryBtn || !dismissBtn) return;
+    if (!promo || !installBtn || !dismissBtn) return;
 
     const isStandalone =
       window.matchMedia("(display-mode: standalone)").matches ||
       window.navigator.standalone === true;
 
-    if (isStandalone || window.localStorage.getItem("installPromoDismissed") === "true") {
-      return;
-    }
+    if (isStandalone) return;
 
-    let deferredPrompt = null;
+    const dismissed = window.localStorage.getItem("installPromoDismissed") === "true";
+    if (dismissed) return;
 
-    window.addEventListener("beforeinstallprompt", (event) => {
-      event.preventDefault();
-      if (window.localStorage.getItem("installPromoDismissed") === "true") {
-        return;
-      }
-      deferredPrompt = event;
-      promo.hidden = false;
-    });
+    promo.hidden = false;
 
-    primaryBtn.addEventListener("click", async () => {
-      if (!deferredPrompt) return;
-      deferredPrompt.prompt();
-      try {
-        await deferredPrompt.userChoice;
-      } finally {
-        promo.hidden = true;
-        deferredPrompt = null;
+    installBtn.addEventListener("click", () => {
+      if (window.navigator.standalone === undefined) {
+        window.alert("Tap Share → Add to Home Screen");
       }
     });
 
     dismissBtn.addEventListener("click", () => {
       window.localStorage.setItem("installPromoDismissed", "true");
       promo.hidden = true;
-      deferredPrompt = null;
     });
   };
 
@@ -1419,12 +1403,8 @@
   };
 
   const page = document.body.dataset.page;
-  if (page === "home") {
-    setupHome();
-    setupInstallPromo();
-  }
-  if (page === "practice") {
-    setupPractice();
-    setupInstallPromo();
-  }
+  if (page === "home") setupHome();
+  if (page === "practice") setupPractice();
+
+  setupInstallPromo();
 })();
