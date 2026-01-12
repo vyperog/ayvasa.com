@@ -403,6 +403,15 @@ input[type="file"]:focus-visible {
   color: var(--text);
 }
 
+.install-steps {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.install-steps li {
+  margin: 0 0 0.5rem;
+}
+
 .phase-description {
   margin: 0;
   color: var(--text);

@@ -16,27 +16,137 @@
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
+  const setOverlayVisible = (overlay, visible) => {
+    if (!overlay) return;
+    if (visible) {
+      overlay.hidden = false;
+      if (prefersReducedMotion) {
+        overlay.classList.add("is-visible");
+      } else {
+        requestAnimationFrame(() => overlay.classList.add("is-visible"));
+      }
+      return;
+    }
+    overlay.classList.remove("is-visible");
+    if (prefersReducedMotion) {
+      overlay.hidden = true;
+      return;
+    }
+    const card = overlay.querySelector(".overlay-card");
+    const onEnd = (event) => {
+      if (event.target !== card) return;
+      overlay.hidden = true;
+      overlay.removeEventListener("transitionend", onEnd);
+    };
+    overlay.addEventListener("transitionend", onEnd);
+  };
+
+  const isIos = () => {
+    const userAgent = window.navigator.userAgent || window.navigator.vendor || window.opera;
+    return (
+      /iPad|iPhone|iPod/.test(userAgent) ||
+      (window.navigator.platform === "MacIntel" && window.navigator.maxTouchPoints > 1)
+    );
+  };
+
+  const isStandalone = () => {
+    return (
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.navigator.standalone === true
+    );
+  };
+
   const setupInstallPromo = () => {
     const promo = document.getElementById("installPromo");
     const installBtn = document.getElementById("installPromoPrimary");
     const dismissBtn = document.getElementById("installPromoDismiss");
+    const installOverlay = document.getElementById("installOverlay");
+    const installOverlayTitle = document.getElementById("installOverlayTitle");
+    const installOverlayBody = document.getElementById("installOverlayBody");
 
     if (!promo || !installBtn || !dismissBtn) return;
 
-    const isStandalone =
-      window.matchMedia("(display-mode: standalone)").matches ||
-      window.navigator.standalone === true;
+    let deferredInstallPrompt = null;
+    let canPromptInstall = false;
 
-    if (isStandalone) return;
+    if (isStandalone()) {
+      promo.hidden = true;
+      return;
+    }
 
-    const dismissed = window.localStorage.getItem("installPromoDismissed") === "true";
-    if (dismissed) return;
+    const isDismissed = () =>
+      window.localStorage.getItem("installPromoDismissed") === "true";
+    if (isDismissed()) {
+      promo.hidden = true;
+      return;
+    }
 
-    promo.hidden = false;
+    const renderInstallSteps = (title, steps) => {
+      if (!installOverlayTitle || !installOverlayBody) return;
+      installOverlayTitle.textContent = title;
+      installOverlayBody.innerHTML = "";
+      const list = document.createElement("ol");
+      list.className = "install-steps";
+      steps.forEach((step) => {
+        const item = document.createElement("li");
+        item.textContent = step;
+        list.appendChild(item);
+      });
+      installOverlayBody.appendChild(list);
+    };
 
-    installBtn.addEventListener("click", () => {
-      if (window.navigator.standalone === undefined) {
-        window.alert("Tap Share → Add to Home Screen");
+    const openInstallOverlay = (title, steps) => {
+      if (!installOverlay) return;
+      renderInstallSteps(title, steps);
+      setOverlayVisible(installOverlay, true);
+    };
+
+    promo.hidden = !isIos();
+
+    window.addEventListener("beforeinstallprompt", (event) => {
+      event.preventDefault();
+      deferredInstallPrompt = event;
+      canPromptInstall = true;
+      if (!isStandalone() && !isDismissed()) {
+        promo.hidden = false;
+      }
+    });
+
+    window.addEventListener("appinstalled", () => {
+      window.localStorage.setItem("installPromoDismissed", "true");
+      promo.hidden = true;
+      deferredInstallPrompt = null;
+      canPromptInstall = false;
+    });
+
+    installBtn.addEventListener("click", async () => {
+      if (isIos()) {
+        openInstallOverlay("Install Ayvasa on iOS", [
+          "Tap the Share button (square with arrow).",
+          "Scroll and tap Add to Home Screen.",
+          "Tap Add to confirm.",
+        ]);
+        return;
+      }
+
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        const choice = await deferredInstallPrompt.userChoice;
+        if (choice.outcome === "accepted") {
+          window.localStorage.setItem("installPromoDismissed", "true");
+          promo.hidden = true;
+        }
+        deferredInstallPrompt = null;
+        canPromptInstall = false;
+        return;
+      }
+
+      if (!canPromptInstall) {
+        openInstallOverlay("Install Ayvasa", [
+          "Open the browser menu (⋮ or …).",
+          "Choose Install app or Add to Home Screen.",
+          "Follow the prompt to finish.",
+        ]);
       }
     });
 
@@ -44,6 +154,20 @@
       window.localStorage.setItem("installPromoDismissed", "true");
       promo.hidden = true;
     });
+
+    if (installOverlay) {
+      document.addEventListener("click", (event) => {
+        if (event.target.closest("[data-install-close]")) {
+          setOverlayVisible(installOverlay, false);
+        }
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.code === "Escape" && !installOverlay.hidden) {
+          setOverlayVisible(installOverlay, false);
+        }
+      });
+    }
   };
 
   const setupHome = () => {
@@ -190,31 +314,6 @@
 
     const getFlag = (key) => window.localStorage.getItem(key) === "true";
     const setFlag = (key, value) => window.localStorage.setItem(key, value ? "true" : "false");
-
-    const setOverlayVisible = (overlay, visible) => {
-      if (!overlay) return;
-      if (visible) {
-        overlay.hidden = false;
-        if (prefersReducedMotion) {
-          overlay.classList.add("is-visible");
-        } else {
-          requestAnimationFrame(() => overlay.classList.add("is-visible"));
-        }
-        return;
-      }
-      overlay.classList.remove("is-visible");
-      if (prefersReducedMotion) {
-        overlay.hidden = true;
-        return;
-      }
-      const card = overlay.querySelector(".overlay-card");
-      const onEnd = (event) => {
-        if (event.target !== card) return;
-        overlay.hidden = true;
-        overlay.removeEventListener("transitionend", onEnd);
-      };
-      overlay.addEventListener("transitionend", onEnd);
-    };
 
     const renderParagraphs = (container, text) => {
       container.innerHTML = "";
