@@ -884,6 +884,11 @@ input[type="file"]:focus-visible,
   justify-content: center;
 }
 
+/* Practice page header (matches Protocol heading layout, sits above .surface) */
+.app-header {
+  width: min(860px, 100%);
+}
+
 .surface {
   width: min(860px, 100%);
   background: var(--surface);
@@ -922,6 +927,11 @@ input[type="file"]:focus-visible,
   background: rgba(255, 255, 255, 0.8);
   color: var(--text);
   box-shadow: 0 6px 18px rgba(43, 49, 66, 0.1);
+}
+
+.view-title {
+  margin: 0;
+  color: var(--heading);
 }
 
 .view-block {

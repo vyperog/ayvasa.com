@@ -23,16 +23,25 @@
   </header>
 
   <main class="app-shell">
+    <section class="app-header" aria-labelledby="practiceTitle">
+      <div class="protocol-header">
+        <div>
+          <h1 id="practiceTitle">Practice</h1>
+          <p class="protocol-hint">Track a session. No alerts. No interruptions.</p>
+        </div>
+      </div>
+    </section>
+
     <div class="surface">
       <div class="segmented" role="tablist" aria-label="Practice sections">
-        <button class="segmented__tab is-active" data-view="practice" role="tab" aria-selected="true">Practice</button>
+        <button class="segmented__tab is-active" data-view="practice" role="tab" aria-selected="true">Session</button>
         <button class="segmented__tab" data-view="history" role="tab" aria-selected="false">History</button>
         <button class="segmented__tab" data-view="about" role="tab" aria-selected="false">About</button>
       </div>
 
       <section class="view" data-view="practice">
         <div class="practice-screen" data-step="idle">
-          <h1>Practice</h1>
+          <h2 class="view-title">Session</h2>
           <p class="muted">No alerts. No interruptions.</p>
           <div class="button-row">
             <button class="button primary" id="beginFlow">Begin New Session</button>
