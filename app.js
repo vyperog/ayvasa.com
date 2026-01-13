@@ -170,6 +170,56 @@
     }
   };
 
+  const setupFooterYear = () => {
+    const year = new Date().getFullYear();
+    document.querySelectorAll(".site-footer__year").forEach((node) => {
+      node.textContent = year;
+    });
+  };
+
+  const setupAoplModal = () => {
+    const modal = document.getElementById("aopl-modal");
+    const openBtn = document.getElementById("aoplOpenBtn");
+    const closeBtn = document.getElementById("aoplCloseBtn");
+    if (!modal || !openBtn || !closeBtn) return;
+
+    let lastActive = null;
+    let previousOverflow = "";
+
+    const openModal = () => {
+      if (!modal.classList.contains("is-hidden")) return;
+      lastActive = document.activeElement;
+      previousOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      modal.classList.remove("is-hidden");
+      closeBtn.focus();
+    };
+
+    const closeModal = () => {
+      if (modal.classList.contains("is-hidden")) return;
+      modal.classList.add("is-hidden");
+      document.body.style.overflow = previousOverflow;
+      if (lastActive && typeof lastActive.focus === "function") {
+        lastActive.focus();
+      }
+    };
+
+    openBtn.addEventListener("click", openModal);
+    closeBtn.addEventListener("click", closeModal);
+
+    modal.addEventListener("click", (event) => {
+      if (event.target === modal) {
+        closeModal();
+      }
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.code === "Escape" && !modal.classList.contains("is-hidden")) {
+        closeModal();
+      }
+    });
+  };
+
   const setupHome = () => {
     const map = document.getElementById("protocolMap");
     const splashOverlay = document.getElementById("splashOverlay");
@@ -1506,4 +1556,6 @@
   if (page === "practice") setupPractice();
 
   setupInstallPromo();
+  setupFooterYear();
+  setupAoplModal();
 })();
