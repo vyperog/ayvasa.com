@@ -271,6 +271,20 @@ input[type="file"]:focus-visible,
   gap: 0.6rem;
 }
 
+@media (max-width: 520px) {
+  .site-footer__inner {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+
+  .site-footer__right {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+}
+
 .site-footer__link {
   border: none;
   background: none;

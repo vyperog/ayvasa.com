@@ -1551,11 +1551,19 @@
     });
   };
 
-  const page = document.body.dataset.page;
-  if (page === "home") setupHome();
-  if (page === "practice") setupPractice();
+  const safeCall = (label, fn) => {
+    try {
+      fn();
+    } catch (error) {
+      console.error(`${label} init failed:`, error);
+    }
+  };
 
-  setupInstallPromo();
-  setupFooterYear();
-  setupAoplModal();
+  const page = document.body.dataset.page;
+  if (page === "home") safeCall("home", setupHome);
+  if (page === "practice") safeCall("practice", setupPractice);
+
+  safeCall("install promo", setupInstallPromo);
+  safeCall("footer year", setupFooterYear);
+  safeCall("AOPL modal", setupAoplModal);
 })();
