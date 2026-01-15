@@ -723,6 +723,77 @@ input[type="file"]:focus-visible,
   margin-top: var(--s-2);
 }
 
+.about-signup {
+  margin-top: var(--s-4);
+  font-size: 0.9rem;
+  color: var(--muted);
+  opacity: 0.75;
+  transition: opacity 0.2s ease;
+}
+
+.about-signup:hover,
+.about-signup:focus-within {
+  opacity: 1;
+}
+
+.about-signup__note {
+  margin-bottom: var(--s-2);
+}
+
+.about-signup__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  align-items: center;
+}
+
+.about-signup__field {
+  flex: 1 1 200px;
+  min-width: 180px;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.about-signup__field::placeholder {
+  color: var(--muted);
+}
+
+.about-signup__field:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.about-signup__button {
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.about-signup__status {
+  min-height: 1.2em;
+  margin-top: var(--s-2);
+  font-size: 0.85rem;
+}
+
+.about-signup__status.is-success {
+  color: var(--accent);
+}
+
+.about-signup__status.is-error {
+  color: #b05a6a;
+}
+
+.about-signup__honeypot {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
 .panel-grid {
   display: grid;
   gap: var(--s-6);

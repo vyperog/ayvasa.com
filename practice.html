@@ -264,6 +264,26 @@
     <p class="muted">
       If you want the full written guide and practice structure, see <a href="https://www.amazon.com/Coherence-Workbook-Biology-Grounded-Meditation-Integration-ebook/dp/B0GF2WBTCL/" target="_blank" rel="noopener noreferrer"><strong>The Coherence Workbook</strong></a>.
     </p>
+    <form class="about-signup" data-kit-signup>
+      <p class="about-signup__note">Occasional reflections by email.</p>
+      <div class="about-signup__row">
+        <input
+          class="about-signup__field"
+          type="email"
+          name="email"
+          placeholder="email address"
+          autocomplete="email"
+          aria-label="Email address"
+          required
+        />
+        <button class="button ghost about-signup__button" type="submit">Receive occasional reflections</button>
+      </div>
+      <label class="about-signup__honeypot" aria-hidden="true">
+        Leave this field blank
+        <input type="text" name="website" tabindex="-1" autocomplete="off" />
+      </label>
+      <div class="about-signup__status" role="status" aria-live="polite"></div>
+    </form>
   </div>
 </section>
     </div>
@@ -344,6 +364,7 @@
     </div>
   </div>
 
+  <script src="assets/js/kit-signup.js?v=20260113" defer></script>
   <script src="app.js?v=20260113" defer></script>
 </body>
 </html>
