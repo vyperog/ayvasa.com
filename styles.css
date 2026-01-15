@@ -736,6 +736,14 @@ input[type="file"]:focus-visible,
   opacity: 1;
 }
 
+.about-signup__divider {
+  width: 2rem;
+  height: 1px;
+  background-color: var(--muted);
+  margin-bottom: var(--s-3);
+  opacity: 0.5;
+}
+
 .about-signup__note {
   margin-bottom: var(--s-2);
 }
