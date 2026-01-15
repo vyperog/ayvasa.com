@@ -1,7 +1,7 @@
 (() => {
   const KIT_CONFIG = {
-    publicApiKey: "__REPLACE_ME__",
-    formId: "__REPLACE_ME__",
+    publicApiKey: "N7cTYPZolOYFJ8SBR6W2pw",
+    formId: "8246747",
   };
 
   const EMAIL_REGEX = /.+@.+\..+/;
