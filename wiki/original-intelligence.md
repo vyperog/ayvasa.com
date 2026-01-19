@@ -8,22 +8,22 @@ Within Ayvasa, OI is not a belief, identity, or metaphysical claim. It refers to
 
 ## How it shows up
 
-* Decisions land cleanly, without prolonged analysis
-* Inner friction and resistance decrease
-* Action feels quieter, simpler, and more effective
-* A sense of being *moved* rather than *managing*
-* Less concern with self-monitoring or justification
+- Decisions land cleanly, without prolonged analysis
+- Inner friction and resistance decrease
+- Action feels quieter, simpler, and more effective
+- A sense of being *moved* rather than *managing*
+- Less concern with self-monitoring or justification
 
 ## What it is not
 
-* A special state to maintain
-* A personal identity (“I am OI”)
-* Emotional numbness or detachment
-* Loss of functionality or agency
+- A special state to maintain
+- A personal identity (“I am OI”)
+- Emotional numbness or detachment
+- Loss of functionality or agency
 
 ## See also
 
-* [Zero Field](#/zero-field)
-* [Field Coherence](#/field-coherence)
-* [Automatic Self](#/automatic-self)
-* [Conscious Self](#/conscious-self)
+- [Zero Field](#/zero-field)
+- [Field Coherence](#/field-coherence)
+- [Automatic Self](#/automatic-self)
+- [Conscious Self](#/conscious-self)
