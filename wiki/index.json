@@ -349,6 +349,57 @@
         "interference",
         "still-point"
       ]
+    },
+    {
+      "slug": "field-of-experience",
+      "title": "Field of Experience",
+      "category": "core",
+      "summary": "The total, moment-to-moment field in which sensations, thoughts, emotions, and actions arise.",
+      "md": "/wiki/field-of-experience.md",
+      "aliases": [
+        "experiential field",
+        "experience field"
+      ],
+      "related": [
+        "field-coherence",
+        "interference",
+        "original-intelligence",
+        "presence"
+      ]
+    },
+    {
+      "slug": "identity-dissolution",
+      "title": "Identity Dissolution",
+      "category": "modes",
+      "summary": "A loosening or dropping of rigid self-identity as experience organizes with less narrative reference.",
+      "md": "/wiki/identity-dissolution.md",
+      "aliases": [
+        "ego dissolution",
+        "self loosening"
+      ],
+      "related": [
+        "original-intelligence",
+        "unselfconscious-motion",
+        "field-coherence",
+        "presence"
+      ]
+    },
+    {
+      "slug": "interoception",
+      "title": "Interoception",
+      "category": "core",
+      "summary": "The capacity to sense internal bodily signals such as breath, heartbeat, tension, and visceral states.",
+      "md": "/wiki/interoception.md",
+      "aliases": [
+        "internal sensing",
+        "body awareness"
+      ],
+      "related": [
+        "physiological-settling",
+        "regulation",
+        "field-coherence",
+        "presence"
+      ]
     }
   ]
 }
