@@ -621,7 +621,14 @@
 
       const filtered = allEntries.filter(entry => {
         const matchesCategory = activeCategory === "all" || entry.category === activeCategory;
-        const searchTarget = (entry.title + " " + entry.summary + " " + (entry.aliases || []).join(" ")).toLowerCase();
+        const body = bodyBySlug.get(entry.slug) || "";
+        const searchTarget = (
+          (entry.title || "") + " " +
+          (entry.summary || "") + " " +
+          (Array.isArray(entry.aliases) ? entry.aliases.join(" ") : "") + " " +
+          body
+        ).toLowerCase();
+
         const matchesSearch = !query || searchTarget.includes(query);
         return matchesCategory && matchesSearch;
       });
@@ -761,28 +768,46 @@
       return;
     }
 
-    // Add cache busting to ensure fresh data
-    fetch(`wiki/index.json?t=${new Date().getTime()}`)
-      .then(res => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
-      .then(data => {
-        categories = data.categories || [];
-        allEntries = data.entries || [];
+    let bodyBySlug = new Map();
+    let hasFullText = false;
+    const cacheBust = new Date().getTime();
+
+    Promise.all([
+      fetch(`wiki/index.json?t=${cacheBust}`).then(r => {
+        if (!r.ok) throw new Error(`wiki/index.json HTTP ${r.status}`);
+        return r.json();
+      }),
+      fetch(`wiki/search-index.json?t=${cacheBust}`)
+        .then(r => (r.ok ? r.json() : null))
+        .catch(() => null)
+    ])
+      .then(([indexData, searchData]) => {
+        categories = indexData.categories || [];
+        allEntries = indexData.entries || [];
+
+        bodyBySlug = new Map();
+        hasFullText = false;
+
+        if (searchData && Array.isArray(searchData.entries)) {
+          hasFullText = true;
+          for (const e of searchData.entries) {
+            bodyBySlug.set(e.slug, (e.body || "").toLowerCase());
+          }
+        }
+
         renderSortToggle();
         renderChips();
         filterAndRender();
-        processHash(); // Check initial hash
+        processHash();
       })
       .catch(err => {
-        console.error("Failed to load wiki index:", err);
+        console.error("Failed to load wiki:", err);
         resultsContainer.innerHTML = `
-          <div class="wiki-empty">
-            <p>Unable to load Wiki data.</p>
-            <p class="muted">${err.message}</p>
-          </div>
-        `;
+        <div class="wiki-empty">
+          <p>Unable to load Wiki data.</p>
+          <p class="muted">${err.message}</p>
+        </div>
+      `;
       });
   };
 

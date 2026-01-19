@@ -1,4 +1,4 @@
-const CACHE_NAME = "ayvasa-cache-v4";
+const CACHE_NAME = "ayvasa-cache-v5";
 
 const ASSETS = [
   "/",
@@ -10,6 +10,7 @@ const ASSETS = [
   "/manifest.webmanifest",
   "/icons/icon.svg",
   "/wiki/index.json",
+  "/wiki/search-index.json",
   "/wiki/original-intelligence.md",
   "/wiki/zero-field.md",
   "/wiki/field-coherence.md"
