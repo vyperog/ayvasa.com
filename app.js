@@ -554,6 +554,7 @@
     const searchInput = document.getElementById("wikiSearch");
     const chipsContainer = document.getElementById("wikiChips");
     const resultsContainer = document.getElementById("wikiResults");
+    const sortToggle = document.getElementById("wikiSortToggle");
 
     const overlay = document.getElementById("wikiOverlay");
     const overlayTitle = document.getElementById("wikiOverlayTitle");
@@ -565,8 +566,18 @@
     let allEntries = [];
     let categories = [];
     let activeCategory = "all";
+    let sortDirection = window.localStorage.getItem("wikiSortDirection") || "asc"; // "asc" | "desc"
 
     // --- Rendering ---
+    const renderSortToggle = () => {
+      if (!sortToggle) return;
+      sortToggle.textContent = sortDirection === "asc" ? "A–Z ↓" : "Z–A ↑";
+      sortToggle.setAttribute(
+        "aria-label",
+        sortDirection === "asc" ? "Sorted A to Z. Activate to sort Z to A." : "Sorted Z to A. Activate to sort A to Z."
+      );
+    };
+
     const renderChips = () => {
       chipsContainer.innerHTML = "";
 
@@ -614,6 +625,14 @@
         const matchesSearch = !query || searchTarget.includes(query);
         return matchesCategory && matchesSearch;
       });
+
+      filtered.sort((a, b) =>
+        (a.title || "").localeCompare((b.title || ""), undefined, { sensitivity: "base" })
+      );
+
+      if (sortDirection === "desc") {
+        filtered.reverse();
+      }
 
       if (filtered.length === 0) {
         resultsContainer.innerHTML = `<div class="wiki-empty">No entries found.</div>`;
@@ -699,6 +718,15 @@
     // --- Event Listeners ---
     searchInput.addEventListener("input", filterAndRender);
 
+    if (sortToggle) {
+      sortToggle.addEventListener("click", () => {
+        sortDirection = sortDirection === "asc" ? "desc" : "asc";
+        window.localStorage.setItem("wikiSortDirection", sortDirection);
+        renderSortToggle();
+        filterAndRender();
+      });
+    }
+
     closeButtons.forEach(btn => btn.addEventListener("click", closeOverlay));
 
     // Close on ESC
@@ -742,6 +770,7 @@
       .then(data => {
         categories = data.categories || [];
         allEntries = data.entries || [];
+        renderSortToggle();
         renderChips();
         filterAndRender();
         processHash(); // Check initial hash

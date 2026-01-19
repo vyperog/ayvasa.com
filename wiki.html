@@ -34,8 +34,14 @@
                 </div>
 
                 <div class="wiki-controls">
-                    <input id="wikiSearch" class="wiki-search" type="search" placeholder="Search terms…"
-                        autocomplete="off" />
+                    <div class="wiki-controls__row">
+                        <input id="wikiSearch" class="wiki-search" type="search" placeholder="Search terms…"
+                            autocomplete="off" />
+                        <button id="wikiSortToggle" class="button ghost wiki-sort" type="button"
+                            aria-label="Toggle sort order" title="Toggle sort order">
+                            A–Z
+                        </button>
+                    </div>
                     <div id="wikiChips" class="chip-row" aria-label="Category filters"></div>
                 </div>
 

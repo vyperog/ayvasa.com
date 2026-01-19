@@ -1509,8 +1509,27 @@ select {
 
 .wiki-controls {
   display: grid;
-  gap: var(--s-3);
+  gap: var(--s-4);
   margin-bottom: var(--s-5);
+}
+
+.wiki-controls__row {
+  display: flex;
+  gap: var(--s-2);
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.wiki-controls__row .wiki-search {
+  flex: 1 1 240px;
+  min-width: 220px;
+}
+
+.wiki-sort {
+  white-space: nowrap;
+  padding: var(--s-2) var(--s-3);
+  font-size: 0.9rem;
 }
 
 .wiki-search {
