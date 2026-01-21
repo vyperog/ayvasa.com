@@ -798,6 +798,16 @@
       });
     }
 
+    closeButtons.forEach((btn) => {
+      btn.addEventListener("click", closeOverlay);
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.code === "Escape" && !overlay.hidden) {
+        closeOverlay();
+      }
+    });
+
     // --- Init ---
     fetch("wiki/index.json")
       .then((res) => res.json())
