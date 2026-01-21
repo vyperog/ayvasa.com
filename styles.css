@@ -1646,7 +1646,7 @@ select {
 
 .chip:hover {
   border-color: var(--accent);
-  color: var(--accent);
+  color: var(--heading);
   background: rgba(255, 255, 255, 0.5);
 }
 
