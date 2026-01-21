@@ -851,9 +851,18 @@
     // --- Rendering ---
     const renderSortToggle = () => {
       if (!sortToggle) return;
-      sortToggle.textContent = sortDirection === "asc" ? "A–Z" : "Z–A";
+      sortToggle.textContent = sortDirection === "asc" ? "A–Z ↓" : "Z–A ↑";
       sortToggle.setAttribute("aria-label", `Sort: ${sortDirection === "asc" ? "A to Z" : "Z to A"}`);
     };
+
+    if (sortToggle) {
+      sortToggle.addEventListener("click", () => {
+        sortDirection = sortDirection === "asc" ? "desc" : "asc";
+        window.localStorage.setItem("helpSortDirection", sortDirection);
+        renderSortToggle();
+        applyFilters();
+      });
+    }
     const renderChips = () => {
       chipsContainer.innerHTML = "";
 
